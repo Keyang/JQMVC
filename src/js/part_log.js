@@ -1,3 +1,6 @@
+/**
+ * Log definition
+ */
 mvc.ext(mvc['cls'], '_log', function() {
 	var props = {
 
@@ -22,10 +25,8 @@ mvc.ext(mvc['cls'], '_log', function() {
 		 */
 		e : function(e, place, data) {
 			var tmplate="ERROR: {0}. {1}:{2}. At {3}->{4}";
-			_private.log(mvc.util.text.format(template,place,data,mvc.getCurrentController().name,mvc.getCurrentController()._action));
+			_private.log(mvc.util.text.format(tmplate,place,data,mvc.getCurrentController().name,mvc.getCurrentController()._action));
 		}
 	}
 	return _public;
 })
-
-mvc.ext("log", new mvc.cls._log());
