@@ -7,6 +7,9 @@ mvc.ext(mvc,"string",{
 		ajax:{
 			"loadErr":"Ajax loading file error"
 			
+		},
+		event:{
+			"etnf":"Event type indicated not found."
 		}
 	},
 	info:{

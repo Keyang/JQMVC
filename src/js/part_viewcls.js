@@ -11,7 +11,8 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"layout" : "default",
 		"uidataPath" : null,
 		"htmlPagePath" : null,
-		"uidata":null
+		"uidata":null,
+		"event":new mvc.cls.event()
 	};
 	var _private = {
 		getUIDataPath:function(){
@@ -52,7 +53,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 				params["__content__"]=parsedPage;
 				mvc.ajax.asyncLoad(layoutPath,function(layoutHtml){
 					var finalHtml=mvc.util.text.format("<div id='{0}' style='display:none'>{1}</div>",pageID,mvc.parser.parseHtml(layoutHtml,params));
-					_props.
+					_props.event.fire("init",finalHtml);
 					$("body").append(finalHtml);
 					try{
 						callback();
@@ -61,6 +62,10 @@ mvc.ext(mvc.cls, "_view", function(name) {
 					}
 				})
 			})
+			
+			
+			
+			
 			//pre-clean
 			var pageObj = $("#" + pageID);
 			if(pageObj.length > 0) {
@@ -120,7 +125,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * @param func: callback function
 		 */
 		update : function(func) {
-			
+			_private.loadView(func);
 		},
 		/**
 		 * apply all configures and disply the page.
