@@ -39,9 +39,10 @@ mvc.ext(mvc.cls, "ajax", function() {
 				},
 				error:function(xhr,text,err){
 					mvc.log.e(text,"asyncLoad",path);
+					cb("");
 				}
 			};
-			_private.ajax(para,userParam);
+			_private.ajax(param,userParam);
 		},
 		syncLoad : function(path, userParam) {
 			var result = null;
@@ -55,7 +56,7 @@ mvc.ext(mvc.cls, "ajax", function() {
 				dataType : "text"
 			};
 			try {
-				var _res = _private.ajax(param);
+				var _res = _private.ajax(param,userParam);
 				if(_res.statusText === "error") {
 					mvc.log.e(mvc.string.error.ajax.loadErr, "FilePath", path);
 				}
@@ -85,7 +86,7 @@ mvc.ext(mvc.cls, "ajax", function() {
 		 * @ callback callback function
 		 * @ userParam parameters of $.ajax
 		 */
-		asycLoad : _private.asyncLoad
+		asyncLoad : _private.asyncLoad
 	};
 	return _public;
-})
+});

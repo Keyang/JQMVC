@@ -18,4 +18,4 @@ mvc.ext(mvc,"string",{
 			"lpf":"Load Page From:"
 		}
 	}
-})
+});

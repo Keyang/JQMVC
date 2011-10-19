@@ -11,11 +11,15 @@ mvc.ext(mvc['cls'], '_log', function() {
 		}
 	}
 	var _public = {
-		d : function() {
-
+		d : function(debugInfo) {
+			debugInfo=debugInfo ||"";
+			var template="DEBUG: {0}";
+			_private.log(mvc.util.text.format(template,debugInfo));
 		},
-		i : function() {
-
+		i : function(info) {
+			info=info || "";
+			var template="INFO: {0}";
+			_private.log(mvc.util.text.format(template,info));
 		},
 		/**
 		 * Log an error message
@@ -24,9 +28,14 @@ mvc.ext(mvc['cls'], '_log', function() {
 		 * @param data: related data
 		 */
 		e : function(e, place, data) {
-			var tmplate="ERROR: {0}. {1}:{2}. At {3}->{4}";
-			_private.log(mvc.util.text.format(tmplate,place,data,mvc.getCurrentController().name,mvc.getCurrentController()._action));
+			e=e || "";
+			if (typeof e==="string"){
+			var tmplate="ERROR: {0}. {1}:{2}.";
+			_private.log(mvc.util.text.format(tmplate,e,place,data));
+			}else{
+				throw(e);
+			}
 		}
 	}
 	return _public;
-})
+});

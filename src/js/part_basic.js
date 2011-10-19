@@ -57,4 +57,4 @@ mvc.ext(mvc,"util",{
     isEmpty: function(val) {
       return val==undefined||val===""||val===null||val=== {};
     }
-})
+});

@@ -7,17 +7,19 @@
  */
 
 _app_={ // Settings
+  xhr:undefined,
+  appContainer:"#pages",
   rootFile:"./index.html", //html file path that imported jQuery-neat-mvc library. It could be absolute path or relative path.
   appPath:"app/", // relative path for application folder.
-  controllerPath:"app/Controller/",
-  modelPath:"app/Model/",
-  layoutPath:"app/Layout/",
-  pluginPath:"app/plugins/",
-  viewerPath:"app/Viewer/",
-  uidataPath:"app/Viewer/uidata/",
-  elementPath:"app/Viewer/elements/",
-  pagePath:"app/Viewer/pages/",
-  cssPath:"css/",
+  controllerPath:"app/Controller",
+  modelPath:"app/Model",
+  layoutPath:"app/layout",
+  pluginPath:"app/plugins",
+  viewerPath:"app/view",
+  uidataPath:"app/view/uidata",
+  elementPath:"app/view/elements",
+  pagePath:"app/view/pages",
+  cssPath:"./css",
   corePath:"js/mvc_core.js",//path to framework core file. You can also put a remote URl like: corePath:"http://jqueryneatmvc.co.cc/getLatestCore",
   //change this to your own core file path.
   //corePath:"http://jqueryneatmvc.co.cc/getLatestCore",

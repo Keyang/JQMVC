@@ -1,3 +1,6 @@
+/**
+ * part_parser.js
+ */
 mvc.ext(mvc.cls, "parser", function() {
 	var _public = {
 		/**
@@ -37,7 +40,7 @@ mvc.ext(mvc.cls, "parser", function() {
 				var __endPos = __html.indexOf(et, __startPos);
 				var __statement = __html.substring(__startPos, __endPos);
 				var __val = "";
-				__val = mvc.parserExe(__statement, param);
+				__val = mvc.parseExec(__statement, param);
 				if(__val == undefined) {
 					__val = "";
 				}
@@ -48,9 +51,9 @@ mvc.ext(mvc.cls, "parser", function() {
 		}
 	};
 	return _public;
-})
+});
 
-mvc.ext(mvc, "parserExe", function(__code__, __scope__) {
+mvc.ext(mvc, "parseExec", function(__code__, __scope__) {
 	with(__scope__) {
 		try {
 			return eval(__code__);
@@ -58,4 +61,11 @@ mvc.ext(mvc, "parserExe", function(__code__, __scope__) {
 			mvc.log.e(e, "Parse MVC code:", __code__);
 		}
 	}
-})
+});
+mvc.ext(mvc, "parseJSON", function(__code__) {
+		try {
+			return eval("("+__code__+")");
+		} catch(e) {
+			mvc.log.e(e, "Parse JSON Object:", __code__);
+		}
+});

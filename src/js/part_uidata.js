@@ -1,3 +1,6 @@
+/**
+ * part_uidata.js
+ */
 mvc.ext(mvc.cls, "uidata", function() {
 	var _public = {
 		/**
@@ -8,7 +11,7 @@ mvc.ext(mvc.cls, "uidata", function() {
 			_private.setGlobalData(jsonObj);
 		},
 		getUIDataScope:function(dataPath){
-			return _private.getUIDataScope(datapath);
+			return _private.getUIDataScope(dataPath);
 		}
 	}
 	var _private = {
@@ -30,7 +33,7 @@ mvc.ext(mvc.cls, "uidata", function() {
 							tmpObj = res;
 						} else {
 							try {
-								tmpObj = eval("(" + res + ")");
+								tmpObj = mvc.parseJSON(res);
 							} catch(e) {
 								mvc.log.e(e, "Load UI Data", datapath);
 							}
@@ -52,4 +55,4 @@ mvc.ext(mvc.cls, "uidata", function() {
 	}
 	return _public;
 
-})
+});

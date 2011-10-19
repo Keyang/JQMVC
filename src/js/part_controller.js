@@ -175,5 +175,5 @@ mvc.ext(mvc.cls, "controller", function() {
 		}
 	};
 	return _public;
-})
+});
 
