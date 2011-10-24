@@ -73,12 +73,9 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * render loaded view. Bring view page to front and set current view as this view.
 		 */
 		render : function() {
-			var curView = mvc.view.get();
-			if(curView != null && curView.getName() === _props.name) {
-				return;
-			}
-			mvc.view.setCurView(_props.name);
-			_public.display(mvc.opt.interfaces.goForwPage);
+			$(mvc.opt.appContainer).find("#" + _public.getName()).remove();
+			$(mvc.opt.appContainer).append(_props.htmlCode);
+			mvc.view.display(_props.name);
 		},
 		getName : function() {
 			return _props.name;
@@ -139,7 +136,8 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"htmlPagePath" : null,
 		"uidata" : null,
 		"event" : new mvc.cls.event(),
-		"wrapperTag" : "div"
+		"wrapperTag" : "div",
+		"htmlCode":""
 	};
 	var _private = {
 		init : function() {
@@ -173,7 +171,6 @@ mvc.ext(mvc.cls, "_view", function(name) {
 				}
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
-			$("#" + pageID).remove();
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
@@ -189,7 +186,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 					};
 					_props.event.fire("init", obj,undefined,false);
 					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
-					$(mvc.opt.appContainer).append(finalHtml);
+					_props.htmlCode=finalHtml;
 					try {
 						callback();
 					} catch(e) {

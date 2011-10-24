@@ -650,6 +650,7 @@ mvc.ext(mvc.cls, "uidata", function() {
 });
 /**
  * View Definition
+ * part_view.js
  */
 mvc.ext(mvc.cls, "view", function() {
 	var _public = {
@@ -668,17 +669,29 @@ mvc.ext(mvc.cls, "view", function() {
 			return _private.isViewExisted(name);
 		},
 		/**
-		 * Set Specified view as current view. This will not change page.
+		 * Try to display loaded view.
 		 */
-		setCurView : function(name) {
-			return _private.setCurView(name);
+		display : function(name) {
+			return _private.display(name);
 		},
 		/**
-		 * load and render a specified view. This will be managed by view ctl. Later loaded view will be displayed.
+		 * load and render a specified view. This will be managed by view ctl. Last loaded view will be displayed.
 		 * @param name name of the view
 		 */
 		loadRender : function(name) {
 			return _private.loadRender(name);
+		},
+		/**
+		 * Reset specified view with default view object.
+		 */
+		reset : function(name) {
+			return _private.reset(name);
+		},
+		/**
+		 * go back to last view.
+		 */
+		back:function(){
+			return _private.back();
 		}
 	}
 
@@ -686,18 +699,31 @@ mvc.ext(mvc.cls, "view", function() {
 		curView : null,
 		_views : {},
 		viewRendering : null,
+		history:new mvc.cls.history()
 	};
 	var _private = {
+		back:function(){
+			var viewName=_props.history.back();
+			_private.display(viewName,false);
+		},
+		reset : function(name) {
+			_props._views[name] = new mvc.cls._view(name);
+		},
 		loadRender : function(name) {
 			if(_private.isViewExisted(name) === false) {
 				return;
 			}
+			mvc.log.i("Current Loading View:"+name);
 			var view = _props.viewRendering = _private.get(name);
-			view.load(function(){
+			view.load(function() {
+				mvc.log.i("Intended Rendering View:"+view.getName());
 				if(_props.viewRendering.getName() == view.getName()) {
 					view.render();
+				}else{
+					var tmp="View Render Interrupted for:"+view.getName();
+					mvc.log.i(tmp);
 				}
-			})
+			});
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -722,12 +748,23 @@ mvc.ext(mvc.cls, "view", function() {
 				return false;
 			}
 		},
-		setCurView : function(name) {
+		display : function(name,forward) {
 			if(!_public.isViewExisted(name)) {
-				mvc.log.e(mvc.string.error.view["vnex"], "View Name", name);
+				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
 				return;
 			}
-			_props.curView = _public.get(name);
+			try {
+				var view = _public.get(name);
+				_props.curView = view;
+				var func=mvc.opt.interfaces.goForwPage;
+				if (forward===false){
+					func=mvc.opt.interfaces.goBackPage;					
+				}
+				view.display(func);
+			} catch(e) {
+				mvc.log.e(e,"Display View",name);
+			}
+
 		}
 	};
 
@@ -808,12 +845,9 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * render loaded view. Bring view page to front and set current view as this view.
 		 */
 		render : function() {
-			var curView = mvc.view.get();
-			if(curView != null && curView.getName() === _props.name) {
-				return;
-			}
-			mvc.view.setCurView(_props.name);
-			_public.display(mvc.opt.interfaces.goForwPage);
+			$(mvc.opt.appContainer).find("#" + _public.getName()).remove();
+			$(mvc.opt.appContainer).append(_props.htmlCode);
+			mvc.view.display(_props.name);
 		},
 		getName : function() {
 			return _props.name;
@@ -874,7 +908,8 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"htmlPagePath" : null,
 		"uidata" : null,
 		"event" : new mvc.cls.event(),
-		"wrapperTag" : "div"
+		"wrapperTag" : "div",
+		"htmlCode":""
 	};
 	var _private = {
 		init : function() {
@@ -908,7 +943,6 @@ mvc.ext(mvc.cls, "_view", function(name) {
 				}
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
-			$("#" + pageID).remove();
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
@@ -924,7 +958,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 					};
 					_props.event.fire("init", obj,undefined,false);
 					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
-					$(mvc.opt.appContainer).append(finalHtml);
+					_props.htmlCode=finalHtml;
 					try {
 						callback();
 					} catch(e) {
@@ -938,6 +972,68 @@ mvc.ext(mvc.cls, "_view", function(name) {
 	return _public;
 });
 /**
+ * part_history.js
+ */
+mvc.ext(mvc.cls, "history", function() {
+	var _public={
+		/**
+		 * push a entry to stack.
+		 */
+		push:function(name){
+			return _private.push(name);
+		},
+		/**
+		 * clear stack
+		 */
+		clear:function(){
+			return _private.clear();
+		},
+		/**
+		 * back to a specified entry.
+		 * back to last entry if name is ommited.
+		 */
+		back:function(name){
+			return _private.back(name);
+		}
+	}
+	var _props = {
+		stack : [],
+	}
+	var _private = {
+		push : function(pageID) {
+			if(pageID && pageID != null) {
+				_props.stack.push(pageID);
+			}
+		},
+		clear : function(clearDom) {
+				_props.stack = [];
+		},
+		pop : function() {
+			return _props.stack.pop();
+		},
+		back : function(pageID) {
+			var lastPageID = "";
+			if(pageID === undefined) {//back to last page
+				lastPageID = _private.pop();
+				while(_props.stack.length > 0 && ( typeof (lastPageID) == "undefined" || mvc.util.isEmpty(lastPageID) || $("#" + lastPageID).length == 0)) {
+					lastPageID = _private.pop();
+				}
+			} else {//back to page with id: pageID
+				while(_props.stack.length > 0 && pageID != lastPageID) {// check whether specified page has been loaded.
+					lastPageID = _private.pop();
+				}
+				if(lastPageID != pageID) {// cannot find page in history stack. Load specified page from scratch.
+					lastPageID=pageID;
+				}
+			}
+			if(lastPageID != undefined && lastPageID != null) {
+				return lastPageID;
+			}
+		}
+	}
+	
+	return _public;
+})/**
  * Generate entries
  */
 

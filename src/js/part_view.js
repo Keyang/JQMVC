@@ -1,5 +1,6 @@
 /**
  * View Definition
+ * part_view.js
  */
 mvc.ext(mvc.cls, "view", function() {
 	var _public = {
@@ -18,17 +19,29 @@ mvc.ext(mvc.cls, "view", function() {
 			return _private.isViewExisted(name);
 		},
 		/**
-		 * Set Specified view as current view. This will not change page.
+		 * Try to display loaded view.
 		 */
-		setCurView : function(name) {
-			return _private.setCurView(name);
+		display : function(name) {
+			return _private.display(name);
 		},
 		/**
-		 * load and render a specified view. This will be managed by view ctl. Later loaded view will be displayed.
+		 * load and render a specified view. This will be managed by view ctl. Last loaded view will be displayed.
 		 * @param name name of the view
 		 */
 		loadRender : function(name) {
 			return _private.loadRender(name);
+		},
+		/**
+		 * Reset specified view with default view object.
+		 */
+		reset : function(name) {
+			return _private.reset(name);
+		},
+		/**
+		 * go back to last view.
+		 */
+		back:function(){
+			return _private.back();
 		}
 	}
 
@@ -36,18 +49,31 @@ mvc.ext(mvc.cls, "view", function() {
 		curView : null,
 		_views : {},
 		viewRendering : null,
+		history:new mvc.cls.history()
 	};
 	var _private = {
+		back:function(){
+			var viewName=_props.history.back();
+			_private.display(viewName,false);
+		},
+		reset : function(name) {
+			_props._views[name] = new mvc.cls._view(name);
+		},
 		loadRender : function(name) {
 			if(_private.isViewExisted(name) === false) {
 				return;
 			}
+			mvc.log.i("Current Loading View:"+name);
 			var view = _props.viewRendering = _private.get(name);
-			view.load(function(){
+			view.load(function() {
+				mvc.log.i("Intended Rendering View:"+view.getName());
 				if(_props.viewRendering.getName() == view.getName()) {
 					view.render();
+				}else{
+					var tmp="View Render Interrupted for:"+view.getName();
+					mvc.log.i(tmp);
 				}
-			})
+			});
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -72,12 +98,23 @@ mvc.ext(mvc.cls, "view", function() {
 				return false;
 			}
 		},
-		setCurView : function(name) {
+		display : function(name,forward) {
 			if(!_public.isViewExisted(name)) {
-				mvc.log.e(mvc.string.error.view["vnex"], "View Name", name);
+				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
 				return;
 			}
-			_props.curView = _public.get(name);
+			try {
+				var view = _public.get(name);
+				_props.curView = view;
+				var func=mvc.opt.interfaces.goForwPage;
+				if (forward===false){
+					func=mvc.opt.interfaces.goBackPage;					
+				}
+				view.display(func);
+			} catch(e) {
+				mvc.log.e(e,"Display View",name);
+			}
+
 		}
 	};
 
