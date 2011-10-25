@@ -1,35 +1,40 @@
 describe("View", function() {
+	var view = null;
+	var i = 0;
+	beforeEach(function() {
+		mvc.view.reset("bindEvent" + i);
+		view = mvc.view.get("bindEvent" + i);
+
+	})
+	afterEach(function() {
+		var name=view.getName();
+		mvc.view.loadRender(name);
+		i++;
+	})
 	it("can create new view", function() {
 		mvc.view.get("test");
 	})
 	it("can render the view", function() {
-		var view = mvc.view.get("test");
 		view.bind("displayed", "checkCurView", function() {
 			expect(mvc.view.get().getName()).toEqual(view.getName());
 		})
-		mvc.view.loadRender("test");
-
 	})
 	it("can render view without page html file existed", function() {
-		var view = mvc.view.get("nothisfile");
-		//create view
 		view.bind("displayed", "checkCurView", function() {
 			expect(mvc.view.get().getName()).toEqual(view.getName());
 		})
-		mvc.view.loadRender("nothisfile");
 	})
-	var test1View = null;
 	it("can load a view html file without rendering. Change the content of loaded html", function() {
-		test1View = mvc.view.get("test1");
-		test1View.bind("init", "myInit", function(html) {
+		view.bind("init", "myInit", function(html) {
 			html.html = "<p>html has been changed</p>";
 		})
-		test1View.load(function() {
+		view.load(function() {
 
 		});
 	})
 	it("can render a loaded view", function() {
-		test1View = mvc.view.get("test1");
+		var o=i-1;
+		test1View = mvc.view.get("bindEvent"+o);
 		test1View.bind("init", "myInit", function(html) {
 			html.html = "<p>html has been changed</p>";
 		})
@@ -37,17 +42,13 @@ describe("View", function() {
 			test1View.render();
 		});
 	})
+	it("can change wrapped tag", function() {
+		mvc.view.changeName("bindEvent"+i,"changedName");
+		view.setOptions({
+			"wrapperTag":"p"
+		});
+	})
 	describe("view events", function() {
-		var view = null;
-		var i=0;
-		beforeEach(function() {
-			mvc.view.reset("bindEvent"+i);
-			view = mvc.view.get("bindEvent"+i);
-			
-		})
-		afterEach(function() {
-			mvc.view.loadRender("bindEvent"+(i++));
-		})
 		it("can bind/replace an event", function() {
 			view.bind("init", "testInit", function(html) {
 				html.html += "<p>init eventA</p>";
@@ -65,6 +66,14 @@ describe("View", function() {
 			})
 			view.bindOnce("init", "testInit", function(html) {
 				html.html += "<p>init event2</p>";
+			})
+		})
+		it("can bind any event and fire it", function() {
+			view.bind("myevent", "testevent", function() {
+				view.page().html("<b>content changed</b>");
+			})
+			view.bind("displayed", "afterDisplayed", function() {
+				view.fire("myevent");
 			})
 		})
 	})

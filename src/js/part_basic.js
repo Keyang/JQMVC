@@ -9,6 +9,9 @@
 		if (typeof key!="string"){
 			throw("mvc.ext second param should be key as string.");
 		}
+		if (parent[key]!=undefined){
+			mvc.log.i("Overwritten extention detected.");
+		}
 		parent[key]=tarObj;
 	}
 	obj.opt=opt;

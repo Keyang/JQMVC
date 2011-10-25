@@ -55,8 +55,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 		},
 		bind : function(eventType, key, func) {
 			if(_props.events[eventType] == undefined) {
-				mvc.log.e(mvc.string.error.event.etnf, "EventType", eventType);
-				return false;
+				_props.events[eventType]={};
 			}
 			_props.events[eventType][key] = func;
 			return true;

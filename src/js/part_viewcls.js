@@ -33,9 +33,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * @param opt option object
 		 */
 		setOptions : function(opt) {
-			for(var key in opt) {
-				_props[key] = opt[key];
-			}
+			return _private.setOptions(opt);
 		},
 		/**
 		 * Display this view.
@@ -128,7 +126,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 	var _props = {
 		"name" : name,
 		"param" : {},
-		"isRendered" : false,
+		"isLoaded" : false,
 		"eventObj" : {},
 		"initOnce" : false,
 		"layout" : "default",
@@ -137,11 +135,26 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"uidata" : null,
 		"event" : new mvc.cls.event(),
 		"wrapperTag" : "div",
-		"htmlCode":""
+		"htmlCode":"",
+		"isUIdataLoaded":false
 	};
 	var _private = {
+		setOptions : function(opt) {
+			for(var key in opt) {
+				_props[key] = opt[key];
+				_private.optionInteruptter(key);
+			}
+		},
+		optionInteruptter:function(keyName){
+			if ("name"===keyName){
+				_props.isUIdataLoaded=false;
+			}
+			if ("uidataPath"===keyName){
+				_props.isUIdataLoaded=false;
+			}
+			
+		},
 		init : function() {
-			_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
 			mvc.util.copyJSON(_props.event, _public);
 		},
 		getUIDataPath : function() {
@@ -172,6 +185,9 @@ mvc.ext(mvc.cls, "_view", function(name) {
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
+				if (!_props.isUIdataLoaded){
+					_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
+				}
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
 				var parsedPage = mvc.parser.parseHtml(pageHtml, params);
@@ -187,6 +203,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 					_props.event.fire("init", obj,undefined,false);
 					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
 					_props.htmlCode=finalHtml;
+					_props.isLoaded=true;
 					try {
 						callback();
 					} catch(e) {

@@ -9,6 +9,9 @@
 		if (typeof key!="string"){
 			throw("mvc.ext second param should be key as string.");
 		}
+		if (parent[key]!=undefined){
+			mvc.log.i("Overwritten extention detected.");
+		}
 		parent[key]=tarObj;
 	}
 	obj.opt=opt;
@@ -101,183 +104,77 @@ mvc.ext(mvc['cls'], '_log', function() {
 });
 /**
  * Controller Definition
+ * part_controller.js
  */
-mvc.ext(mvc.cls, "controller", function() {
-	var _props = {
-		curCtl : null,
-		_ctls : {},
-		_controller : {//Controller default settings
-			prop : {
-				name : "controllerName", // current controller name
-				_action : "" // current action will be set dynamically.
-			},
-			ulti : {
-				
-			},
-			action : {
-
-			}
-		}
-	};
-	
-	
-	var _private = {
-		ctlcls : function(key, param) {
-			var components = _props.components;
-			var props = _props._controller.props;
-			var ulti = _props._controller.ulti;
-			var actions = _props._controller.action;
-			var that = {};
-			//Register pre-defined props
-			for(var key in props) {
-				that[key] = props[key];
-			}
-			if( typeof (param["prop"]["name"]) == "undefined") {
-				throw ("Please specify a name to controllers");
-			} else {
-				that["name"] = param["prop"]["name"];
-			}
-			//Register pre-defined methods
-			for(var key in actions) {
-				that[key] = __mvc.func.controllerFuncMaker(that, key, actions[key]);
-			}
-
-			//Register pre-defined ulties
-			for(var key in ulti) {
-				that[key] = function(key, ulti, that) {
-					return function() {
-						return ulti[key].apply(that, arguments);
-					}
-				}(key, ulti, that);
-			}
-			//Register user-defined methods,props, ulties, components
-			if( typeof (param["prop"]) != "undefined") {
-				for(var key in param["prop"]) {
-					if( typeof (param["prop"][key]) != "function") {
-						that[key] = param["prop"][key];
-					}
-				}
-			}
-			if(param["ulti"] != undefined) {
-				for(var key in param["ulti"]) {
-					that[key] = function(key, ulti, that) {
-						return function() {
-							try {
-								var res = ulti[key].apply(that, arguments);
-							} catch(e) {
-								console.log("Error in ulti:" + key + " in controller:" + that.name + " Error:" + e);
-							}
-							return res;
-						}
-					}(key, param["ulti"], that);
-				}
-			}
-			if(param["action"] != undefined) {
-				for(var key in param["action"]) {
-					if( typeof (param["action"][key]) != "function") {
-						that[key] = param["action"][key];
-					} else {
-						that[key] = __mvc.func.controllerFuncMaker(that, key, param["action"][key]);
-					}
-				}
-			}
-			if(param["components"] != undefined) {
-				that["com"] = {};
-				//init
-				for(var i = 0; i < param["components"].length; i++) {
-					if(components[param["components"][i]] != undefined) {
-						that["com"][param["components"][i]] = (function() {
-							var comName = param["components"][i];
-							var com = components[param["components"][i]];
-							if( typeof com != "function") {
-								return com;
-							}
-							return function() {
-								try {
-									return com.apply(com, arguments);
-								} catch(e) {
-									console.log("error in component:" + comName + " Error:" + e);
-								}
-							}
-						})();
-					} else {
-						var path = _app_.pluginPath + "P" + param["components"][i] + ".js";
-						var res = $.mvc.func.loadPage(path);
-
-						if(res != "") {
-							try {
-
-								eval(res);
-							} catch(e) {
-								console.log("Parse error: " + e + " in componentn:" + param["components"][i]);
-							}
-						}
-						if(components[param["components"][i]] != undefined) {
-							that["com"][param["components"][i]] = (function() {
-								var comName = param["components"][i];
-								var com = components[param["components"][i]];
-								if( typeof com != "function") {
-									return com;
-								}
-								return function() {
-									try {
-										return com.apply(com, arguments);
-									} catch(e) {
-										console.log("error in component:" + comName + " Error:" + e);
-									}
-								}
-							})();
-							continue;
-						}
-						throw ("Component:" + param["components"][i] + " is not defined");
-					}
-				}
-			}
-
-			if(param["events"] != undefined) {
-				that["_uievents"] = param["events"];
-			}
-			if(param["models"] != undefined) {
-				var ms = param["models"];
-				if(ms.constructor == Array) {
-					for(var i = 0; i < ms.length; i++) {
-						that[ms[i]] = $.mvc.model(ms[i]);
-					}
-				}
-			}
-			if( typeof (that.name) == "undefined") {
-				throw ("name should be specified in a controller");
-			}
-			if(__mvc.c[that.name] != undefined) {
-				throw ("Controller:" + that.name + " has been defined more than once.");
-			}
-
-			__mvc.c[that.name] = that;
-			//Initialise if init method is defined
-			if(that["init"] != undefined) {
-				$(document).ready(that["init"]);
-			}
-		}
-	};
-	var _public = {
-		add : function(key, obj) {
-			var param = obj;
-
+mvc.ext(mvc,"ctl",function(name){
+	var _public={
+		/**
+		 * Send Message to this controller synchronously.
+		 */
+		sendMSG:function(msg,args){
+			return _private.sendMSG(msg,args);
 		},
-		get : function(key) {
-			if( typeof key == "undefined") {
-				return _props.curCtl;
-			} else {
-				if(_props._ctls[key] == undefined) {
-					mvc.log.e("Cant find controller.", "Key", key);
-				}
-			}
-
+		/**
+		 * Post Message to this controller asynchronously. 
+		 */
+		postMSG:function(msg,args,callback){
+			return _private.postMSG(msg,args,callback);
 		}
 	};
+	var _props={
+		_ctl:null
+	};
+	var _private={
+		checkMSG:function(msg){
+			var ctl=_props._ctl;
+			if (ctl[msg]!=undefined){
+				if (typeof ctl[msg] ==="function"){
+					return true;
+				}else{
+					mvc.log.i("Detected non-function item assigned to controller.");
+				}
+			}else{
+				mvc.log.i("Refered non-defined message:"+msg);
+			}
+			return false;
+		},
+		sendMSG:function(msg,args){
+			var ctl=_props._ctl;
+			if (_private.checkMSG(msg)){
+				return ctl[msg](args);
+			}
+			return;
+		},
+		postMSG:function(msg,args,callback){
+			var ctl=_props._ctl;
+			if (_private.checkMSG(msg)){
+				setTimeout(function(){
+					var res=ctl[msg](args);
+					if (callback!=undefined && typeof callback==="function"){
+						callback(res);
+					}
+				},0)
+			}
+			return;
+		},
+		init:function(){
+			if (!_private.isCtlExisted(name)){
+				throw("Controller with name:"+name+" Does not exist.");
+			}
+			_props._ctl=mvc.controllers[name];
+		},
+		isCtlExisted:function(name){
+			if (mvc.controllers[name]==undefined){
+				return false;
+			}
+			return true;
+		}
+	}
+	_private.init();
 	return _public;
 });
 
+mvc.ext(mvc,"controllers",{}); //empty controller entry
 mvc.ext(mvc.cls, "ajax", function() {
 	var _props = {
 		cachedHtml : {}
@@ -427,8 +324,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 		},
 		bind : function(eventType, key, func) {
 			if(_props.events[eventType] == undefined) {
-				mvc.log.e(mvc.string.error.event.etnf, "EventType", eventType);
-				return false;
+				_props.events[eventType]={};
 			}
 			_props.events[eventType][key] = func;
 			return true;
@@ -692,6 +588,9 @@ mvc.ext(mvc.cls, "view", function() {
 		 */
 		back:function(){
 			return _private.back();
+		},
+		changeName:function(oldName,newName){
+			return _private.changeName(oldName,newName);
 		}
 	}
 
@@ -702,6 +601,14 @@ mvc.ext(mvc.cls, "view", function() {
 		history:new mvc.cls.history()
 	};
 	var _private = {
+		changeName:function(oldName,newName){
+			var view=_private.get(oldName);
+			view.setOptions({
+				name:newName
+			});
+			_props._views[newName]=view;
+			delete _props._views[oldName];
+		},
 		back:function(){
 			var viewName=_props.history.back();
 			_private.display(viewName,false);
@@ -805,9 +712,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * @param opt option object
 		 */
 		setOptions : function(opt) {
-			for(var key in opt) {
-				_props[key] = opt[key];
-			}
+			return _private.setOptions(opt);
 		},
 		/**
 		 * Display this view.
@@ -900,7 +805,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 	var _props = {
 		"name" : name,
 		"param" : {},
-		"isRendered" : false,
+		"isLoaded" : false,
 		"eventObj" : {},
 		"initOnce" : false,
 		"layout" : "default",
@@ -909,11 +814,26 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"uidata" : null,
 		"event" : new mvc.cls.event(),
 		"wrapperTag" : "div",
-		"htmlCode":""
+		"htmlCode":"",
+		"isUIdataLoaded":false
 	};
 	var _private = {
+		setOptions : function(opt) {
+			for(var key in opt) {
+				_props[key] = opt[key];
+				_private.optionInteruptter(key);
+			}
+		},
+		optionInteruptter:function(keyName){
+			if ("name"===keyName){
+				_props.isUIdataLoaded=false;
+			}
+			if ("uidataPath"===keyName){
+				_props.isUIdataLoaded=false;
+			}
+			
+		},
 		init : function() {
-			_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
 			mvc.util.copyJSON(_props.event, _public);
 		},
 		getUIDataPath : function() {
@@ -944,6 +864,9 @@ mvc.ext(mvc.cls, "_view", function(name) {
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
+				if (!_props.isUIdataLoaded){
+					_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
+				}
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
 				var parsedPage = mvc.parser.parseHtml(pageHtml, params);
@@ -959,6 +882,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 					_props.event.fire("init", obj,undefined,false);
 					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
 					_props.htmlCode=finalHtml;
+					_props.isLoaded=true;
 					try {
 						callback();
 					} catch(e) {
@@ -1041,5 +965,4 @@ mvc.ext(mvc,"log", new mvc.cls._log());
 mvc.ext(mvc,"ajax",new mvc.cls.ajax());
 mvc.ext(mvc,"parser",new mvc.cls.parser());
 mvc.ext(mvc,"uidata",new mvc.cls.uidata());
-mvc.ext(mvc,"controller", new mvc.cls.controller());
 mvc.ext(mvc,"view", new mvc.cls.view());

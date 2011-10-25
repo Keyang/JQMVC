@@ -42,6 +42,9 @@ mvc.ext(mvc.cls, "view", function() {
 		 */
 		back:function(){
 			return _private.back();
+		},
+		changeName:function(oldName,newName){
+			return _private.changeName(oldName,newName);
 		}
 	}
 
@@ -52,6 +55,14 @@ mvc.ext(mvc.cls, "view", function() {
 		history:new mvc.cls.history()
 	};
 	var _private = {
+		changeName:function(oldName,newName){
+			var view=_private.get(oldName);
+			view.setOptions({
+				name:newName
+			});
+			_props._views[newName]=view;
+			delete _props._views[oldName];
+		},
 		back:function(){
 			var viewName=_props.history.back();
 			_private.display(viewName,false);
