@@ -5,28 +5,14 @@
 mvc.ext(mvc.cls, "_view", function(name) {
 	var _public = {
 		/**
-		 * Bind a event with specified key
-		 * @param eventType pageEventType
-		 * @param key string
-		 * @param func handler
-		 */
-		bind : function(eventType, key, func) {
-		},
-		/**
-		 * Bind an event with specified key only one time
-		 * @param eventType pageEventType
-		 * @param key string
-		 * @param func handler
-		 */
-		bindOnce : function(eventType, key, func) {
-		},
-		/**
 		 * fire an event.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
+		 * @param async whether fire the events asynchrously. default is true
 		 */
-		fire : function(eventType, param, key) {
+		fire : function(eventType, param, key, async) {
+			return _private.fire(eventType, param, key, async);
 		},
 		/**
 		 * Set View Options.
@@ -42,7 +28,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		display : function(func) {
 			try {
 				func(_props.name);
-				_props.event.fire("displayed");
+				_public.fire("displayed");
 			} catch(e) {
 				mvc.log.e(e, "Display View", _props.name);
 			}
@@ -100,26 +86,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * page container will be returned if no selector given.
 		 */
 		page : function(selector) {
-			if( typeof selector == "undefined") {
-				return $("#" + _props.name);
-			} else {
-				return $("#" + _props.name).find(selector);
-			}
-		},
-		/**
-		 * set "this" to function scope
-		 */
-		callback : function(func, that) {
-			if( typeof (that) == "undefined") {
-				that = this;
-			}
-			return function() {
-				func.apply(that, arguments);
-
-			}
-		},
-		viewer : function() {
-			return $.mvc.curViewer;
+			return _private.page(selector);
 		}
 	};
 
@@ -129,33 +96,48 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"isLoaded" : false,
 		"eventObj" : {},
 		"initOnce" : false,
-		"layout" : "default",
 		"uidataPath" : null,
 		"htmlPagePath" : null,
 		"uidata" : null,
-		"event" : new mvc.cls.event(),
+		"event" : new mvc.cls.event(_public),
 		"wrapperTag" : "div",
-		"htmlCode":"",
-		"isUIdataLoaded":false
+		"htmlCode" : "",
+		"isUIdataLoaded" : false
 	};
 	var _private = {
+		page : function(selector) {
+			if( typeof selector == "undefined") {
+				return $(mvc.opt.appContainer).find("#" + _props.name);
+			} else {
+				return $(mvc.opt.appContainer).find("#" + _props.name).find(selector);
+			}
+		},
+		removeDom : function() {
+			_private.page().remove();
+		},
+		fire : function(eventType, param, key, async) {
+			_props.event.fire(eventType, param, key, async);
+			mvc.view.event.fire(eventType, param, key, async, _public);
+		},
 		setOptions : function(opt) {
 			for(var key in opt) {
-				_props[key] = opt[key];
 				_private.optionInteruptter(key);
+				_props[key] = opt[key];
+
 			}
 		},
-		optionInteruptter:function(keyName){
-			if ("name"===keyName){
-				_props.isUIdataLoaded=false;
+		optionInteruptter : function(keyName) {
+			if("name" === keyName) {
+				_props.isUIdataLoaded = false;
+				_private.removeDom();
 			}
-			if ("uidataPath"===keyName){
-				_props.isUIdataLoaded=false;
+			if("uidataPath" === keyName) {
+				_props.isUIdataLoaded = false;
 			}
-			
+
 		},
 		init : function() {
-			mvc.util.copyJSON(_props.event, _public);
+			mvc.util.copyJSON(_props.event, _public, false);
 		},
 		getUIDataPath : function() {
 			if(_props.uidataPath == null) {
@@ -185,31 +167,26 @@ mvc.ext(mvc.cls, "_view", function(name) {
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
-				if (!_props.isUIdataLoaded){
+				if(!_props.isUIdataLoaded) {
 					_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
 				}
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
-				var parsedPage = mvc.parser.parseHtml(pageHtml, params);
-				params["__content__"] = parsedPage;
-				mvc.ajax.asyncLoad(layoutPath, function(layoutHtml) {
-					if(layoutHtml == "") {
-						layoutHtml = "<?mvc __content__?>";
-					}
-					var pageHtml = mvc.parser.parseHtml(layoutHtml, params);
-					var obj = {
-						html : pageHtml
-					};
-					_props.event.fire("init", obj,undefined,false);
-					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
-					_props.htmlCode=finalHtml;
-					_props.isLoaded=true;
-					try {
-						callback();
-					} catch(e) {
-						mvc.log.e(e, "loadView", path);
-					}
-				})
+				var obj = {
+					html : pageHtml
+				};
+				_public.fire("beforeParse", obj, undefined, false);
+				var parsedPage = mvc.parser.parseHtml(obj.html, params);
+				obj.html = parsedPage;
+				_public.fire("afterParse", obj, undefined, false);
+				var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
+				_props.htmlCode = finalHtml;
+				_props.isLoaded = true;
+				try {
+					callback();
+				} catch(e) {
+					mvc.log.e(e, "loadView", path);
+				}
 			})
 		}
 	};

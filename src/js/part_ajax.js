@@ -1,6 +1,11 @@
+/**
+ * part_ajax.js
+ */
+
 mvc.ext(mvc.cls, "ajax", function() {
 	var _props = {
 		cachedHtml : {}
+		//TODO cache facility
 	};
 	var _private = {
 		ajax : function(defparam, userParam) {

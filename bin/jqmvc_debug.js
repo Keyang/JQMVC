@@ -34,7 +34,7 @@ mvc.ext(mvc,"util",{
 	 * deeply Copy jsonObj to toJson object
 	 * final json object will be returned 
 	 */
-	copyJSON:function (jsonObj,toJson) {
+	copyJSON:function (jsonObj,toJson,override) {
       var tmpObj= {};
       if (toJson!=undefined) {
         tmpObj=toJson;
@@ -42,6 +42,11 @@ mvc.ext(mvc,"util",{
       //deep clone for setting json obj
       var tmpOri=jsonObj;
       for (var key in tmpOri) {
+      	if(override===false){
+      		if (tmpObj[key]!=undefined){
+      			continue;
+      		}
+      	}
         if (!mvc.util.isEmpty(tmpOri[key])) {
           if (tmpOri[key].constructor==Object) {
             tmpObj[key]=mvc.util.copyJSON(tmpOri[key]);
@@ -141,7 +146,7 @@ mvc.ext(mvc,"ctl",function(name){
 		sendMSG:function(msg,args){
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
-				return ctl[msg](args);
+				return ctl[msg].apply(ctl,args);
 			}
 			return;
 		},
@@ -149,7 +154,7 @@ mvc.ext(mvc,"ctl",function(name){
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				setTimeout(function(){
-					var res=ctl[msg](args);
+					var res=ctl[msg].apply(ctl,args);
 					if (callback!=undefined && typeof callback==="function"){
 						callback(res);
 					}
@@ -175,9 +180,14 @@ mvc.ext(mvc,"ctl",function(name){
 });
 
 mvc.ext(mvc,"controllers",{}); //empty controller entry
+/**
+ * part_ajax.js
+ */
+
 mvc.ext(mvc.cls, "ajax", function() {
 	var _props = {
 		cachedHtml : {}
+		//TODO cache facility
 	};
 	var _private = {
 		ajax : function(defparam, userParam) {
@@ -287,9 +297,10 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
 		 * @param async whether fire the events asynchrously. default is true
+		 * @param scope scope that will be used for event handler. (this)
 		 */
-		fire : function(eventType, param, key,async) {
-			return _private.fire(eventType, param, key,async);
+		fire : function(eventType, param, key,async,scope) {
+			return _private.fire(eventType, param, key,async,scope);
 		},
 		/**
 		 * same as bind. It will return directly if specified key existed already.
@@ -308,13 +319,14 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 * Unbind a handler. if Key is ommited all handlers to that eventType will be unbound.
 		 */
 		unbind : function(eventType, key) {
-			if(key != undefined) {
-
-			}
-		}
+			return _private.unbind(eventType,key);
+		},
 	};
 
 	var _private = {
+		setScope:function(scope){
+			_props.scope=scope;
+		},
 		unbind : function(eventType, key) {
 			if(key != undefined) {
 				delete _props.events[eventType][key];
@@ -329,20 +341,19 @@ mvc.ext(mvc.cls, "event", function(that) {
 			_props.events[eventType][key] = func;
 			return true;
 		},
-		fire : function(eventType, param, key,async) {
+		fire : function(eventType, param, key,async,scope) {
 			function proc(){
 				if(_props.events[eventType] == undefined) {
-					mvc.log.e(mvc.string.error.event.etnf, "EventType", eventType);
 					return;
 				}
 				var _funcs = _props.events[eventType];
 				if(key != undefined) {
 					var func = funcs[key];
-					_private.exec(func, param);
+					_private.exec(func, param,scope);
 				} else {
 					for(var key in _funcs) {
 						var func = _funcs[key];
-						_private.exec(func, param);
+						_private.exec(func, param,scope);
 					}
 				}
 			}
@@ -356,15 +367,18 @@ mvc.ext(mvc.cls, "event", function(that) {
 			}
 			
 		},
-		exec : function(func, param) {
+		exec : function(func, param,scope) {
 			if(param == undefined) {
 				param = []
+			}
+			if (scope==undefined){
+				scope=_props.scope;
 			}
 			if(!( param instanceof Array)) {
 				param = [param];
 			}
 			try {
-				func.apply(_props.scope, param);
+				func.apply(scope, param);
 			} catch(e) {
 				mvc.log.e(e, "Execute event handler", func.toString());
 			}
@@ -586,32 +600,42 @@ mvc.ext(mvc.cls, "view", function() {
 		/**
 		 * go back to last view.
 		 */
-		back:function(){
+		back : function() {
 			return _private.back();
 		},
-		changeName:function(oldName,newName){
-			return _private.changeName(oldName,newName);
+		/**
+		 * Change the name of view.
+		 */
+		changeName : function(oldName, newName) {
+			return _private.changeName(oldName, newName);
 		}
+		//Event interfaces
 	}
 
 	var _props = {
 		curView : null,
 		_views : {},
 		viewRendering : null,
-		history:new mvc.cls.history()
+		history : new mvc.cls.history(),
+		events : new mvc.cls.event()
 	};
 	var _private = {
-		changeName:function(oldName,newName){
-			var view=_private.get(oldName);
+		init : function() {
+			_public['event'] = _props.events;
+		},
+		changeName : function(oldName, newName) {
+			var view = _private.get(oldName);
 			view.setOptions({
-				name:newName
+				name : newName
 			});
-			_props._views[newName]=view;
+			_props._views[newName] = view;
 			delete _props._views[oldName];
 		},
-		back:function(){
-			var viewName=_props.history.back();
-			_private.display(viewName,false);
+		back : function() {
+			var viewName = _props.history.back();
+			if(viewName != undefined) {
+				_private.display(viewName, false);
+			}
 		},
 		reset : function(name) {
 			_props._views[name] = new mvc.cls._view(name);
@@ -620,14 +644,14 @@ mvc.ext(mvc.cls, "view", function() {
 			if(_private.isViewExisted(name) === false) {
 				return;
 			}
-			mvc.log.i("Current Loading View:"+name);
+			mvc.log.i("Current Loading View:" + name);
 			var view = _props.viewRendering = _private.get(name);
 			view.load(function() {
-				mvc.log.i("Intended Rendering View:"+view.getName());
+				mvc.log.i("Intended Rendering View:" + view.getName());
 				if(_props.viewRendering.getName() == view.getName()) {
 					view.render();
-				}else{
-					var tmp="View Render Interrupted for:"+view.getName();
+				} else {
+					var tmp = "View Render Interrupted for:" + view.getName();
 					mvc.log.i(tmp);
 				}
 			});
@@ -655,26 +679,31 @@ mvc.ext(mvc.cls, "view", function() {
 				return false;
 			}
 		},
-		display : function(name,forward) {
+		display : function(name, forward) {
 			if(!_public.isViewExisted(name)) {
 				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
 				return;
 			}
 			try {
 				var view = _public.get(name);
+				var oldView=_props.curView;
 				_props.curView = view;
-				var func=mvc.opt.interfaces.goForwPage;
-				if (forward===false){
-					func=mvc.opt.interfaces.goBackPage;					
+				var func = mvc.opt.interfaces.goForwPage;
+				if(forward === false) {
+					func = mvc.opt.interfaces.goBackPage;
+				} else {
+					if (oldView!=null){
+						_props.history.push(oldView.getName());
+					}
 				}
 				view.display(func);
 			} catch(e) {
-				mvc.log.e(e,"Display View",name);
+				mvc.log.e(e, "Display View", name);
 			}
 
 		}
 	};
-
+	_private.init();
 	return _public;
 });
 /**
@@ -684,28 +713,14 @@ mvc.ext(mvc.cls, "view", function() {
 mvc.ext(mvc.cls, "_view", function(name) {
 	var _public = {
 		/**
-		 * Bind a event with specified key
-		 * @param eventType pageEventType
-		 * @param key string
-		 * @param func handler
-		 */
-		bind : function(eventType, key, func) {
-		},
-		/**
-		 * Bind an event with specified key only one time
-		 * @param eventType pageEventType
-		 * @param key string
-		 * @param func handler
-		 */
-		bindOnce : function(eventType, key, func) {
-		},
-		/**
 		 * fire an event.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
+		 * @param async whether fire the events asynchrously. default is true
 		 */
-		fire : function(eventType, param, key) {
+		fire : function(eventType, param, key, async) {
+			return _private.fire(eventType, param, key, async);
 		},
 		/**
 		 * Set View Options.
@@ -721,7 +736,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		display : function(func) {
 			try {
 				func(_props.name);
-				_props.event.fire("displayed");
+				_public.fire("displayed");
 			} catch(e) {
 				mvc.log.e(e, "Display View", _props.name);
 			}
@@ -779,11 +794,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * page container will be returned if no selector given.
 		 */
 		page : function(selector) {
-			if( typeof selector == "undefined") {
-				return $("#" + _props.name);
-			} else {
-				return $("#" + _props.name).find(selector);
-			}
+			return _private.page(selector);
 		},
 		/**
 		 * set "this" to function scope
@@ -808,33 +819,48 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		"isLoaded" : false,
 		"eventObj" : {},
 		"initOnce" : false,
-		"layout" : "default",
 		"uidataPath" : null,
 		"htmlPagePath" : null,
 		"uidata" : null,
-		"event" : new mvc.cls.event(),
+		"event" : new mvc.cls.event(_public),
 		"wrapperTag" : "div",
-		"htmlCode":"",
-		"isUIdataLoaded":false
+		"htmlCode" : "",
+		"isUIdataLoaded" : false
 	};
 	var _private = {
+		page : function(selector) {
+			if( typeof selector == "undefined") {
+				return $(mvc.opt.appContainer).find("#" + _props.name);
+			} else {
+				return $(mvc.opt.appContainer).find("#" + _props.name).find(selector);
+			}
+		},
+		removeDom : function() {
+			_private.page().remove();
+		},
+		fire : function(eventType, param, key, async) {
+			_props.event.fire(eventType, param, key, async);
+			mvc.view.event.fire(eventType, param, key, async, _public);
+		},
 		setOptions : function(opt) {
 			for(var key in opt) {
-				_props[key] = opt[key];
 				_private.optionInteruptter(key);
+				_props[key] = opt[key];
+
 			}
 		},
-		optionInteruptter:function(keyName){
-			if ("name"===keyName){
-				_props.isUIdataLoaded=false;
+		optionInteruptter : function(keyName) {
+			if("name" === keyName) {
+				_props.isUIdataLoaded = false;
+				_private.removeDom();
 			}
-			if ("uidataPath"===keyName){
-				_props.isUIdataLoaded=false;
+			if("uidataPath" === keyName) {
+				_props.isUIdataLoaded = false;
 			}
-			
+
 		},
 		init : function() {
-			mvc.util.copyJSON(_props.event, _public);
+			mvc.util.copyJSON(_props.event, _public, false);
 		},
 		getUIDataPath : function() {
 			if(_props.uidataPath == null) {
@@ -864,31 +890,26 @@ mvc.ext(mvc.cls, "_view", function(name) {
 			}
 			mvc.log.i(mvc.string.info.view.lpf + path);
 			mvc.ajax.asyncLoad(path, function(pageHtml) {
-				if (!_props.isUIdataLoaded){
+				if(!_props.isUIdataLoaded) {
 					_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
 				}
 				var uidata = mvc.util.copyJSON(_props.uidata);
 				var params = mvc.util.copyJSON(_props.param, uidata);
-				var parsedPage = mvc.parser.parseHtml(pageHtml, params);
-				params["__content__"] = parsedPage;
-				mvc.ajax.asyncLoad(layoutPath, function(layoutHtml) {
-					if(layoutHtml == "") {
-						layoutHtml = "<?mvc __content__?>";
-					}
-					var pageHtml = mvc.parser.parseHtml(layoutHtml, params);
-					var obj = {
-						html : pageHtml
-					};
-					_props.event.fire("init", obj,undefined,false);
-					var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
-					_props.htmlCode=finalHtml;
-					_props.isLoaded=true;
-					try {
-						callback();
-					} catch(e) {
-						mvc.log.e(e, "loadView", path);
-					}
-				})
+				var obj = {
+					html : pageHtml
+				};
+				_public.fire("beforeParse", obj, undefined, false);
+				var parsedPage = mvc.parser.parseHtml(obj.html, params);
+				obj.html = parsedPage;
+				_public.fire("afterParse", obj, undefined, false);
+				var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID, obj.html, _props.wrapperTag, _props.wrapperTag);
+				_props.htmlCode = finalHtml;
+				_props.isLoaded = true;
+				try {
+					callback();
+				} catch(e) {
+					mvc.log.e(e, "loadView", path);
+				}
 			})
 		}
 	};

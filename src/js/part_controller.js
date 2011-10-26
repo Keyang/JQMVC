@@ -37,7 +37,7 @@ mvc.ext(mvc,"ctl",function(name){
 		sendMSG:function(msg,args){
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
-				return ctl[msg](args);
+				return ctl[msg].apply(ctl,args);
 			}
 			return;
 		},
@@ -45,7 +45,7 @@ mvc.ext(mvc,"ctl",function(name){
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				setTimeout(function(){
-					var res=ctl[msg](args);
+					var res=ctl[msg].apply(ctl,args);
 					if (callback!=undefined && typeof callback==="function"){
 						callback(res);
 					}

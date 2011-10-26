@@ -34,7 +34,7 @@ mvc.ext(mvc,"util",{
 	 * deeply Copy jsonObj to toJson object
 	 * final json object will be returned 
 	 */
-	copyJSON:function (jsonObj,toJson) {
+	copyJSON:function (jsonObj,toJson,override) {
       var tmpObj= {};
       if (toJson!=undefined) {
         tmpObj=toJson;
@@ -42,6 +42,11 @@ mvc.ext(mvc,"util",{
       //deep clone for setting json obj
       var tmpOri=jsonObj;
       for (var key in tmpOri) {
+      	if(override===false){
+      		if (tmpObj[key]!=undefined){
+      			continue;
+      		}
+      	}
         if (!mvc.util.isEmpty(tmpOri[key])) {
           if (tmpOri[key].constructor==Object) {
             tmpObj[key]=mvc.util.copyJSON(tmpOri[key]);

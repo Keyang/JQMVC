@@ -40,32 +40,42 @@ mvc.ext(mvc.cls, "view", function() {
 		/**
 		 * go back to last view.
 		 */
-		back:function(){
+		back : function() {
 			return _private.back();
 		},
-		changeName:function(oldName,newName){
-			return _private.changeName(oldName,newName);
+		/**
+		 * Change the name of view.
+		 */
+		changeName : function(oldName, newName) {
+			return _private.changeName(oldName, newName);
 		}
+		//Event interfaces
 	}
 
 	var _props = {
 		curView : null,
 		_views : {},
 		viewRendering : null,
-		history:new mvc.cls.history()
+		history : new mvc.cls.history(),
+		events : new mvc.cls.event()
 	};
 	var _private = {
-		changeName:function(oldName,newName){
-			var view=_private.get(oldName);
+		init : function() {
+			_public['event'] = _props.events;
+		},
+		changeName : function(oldName, newName) {
+			var view = _private.get(oldName);
 			view.setOptions({
-				name:newName
+				name : newName
 			});
-			_props._views[newName]=view;
+			_props._views[newName] = view;
 			delete _props._views[oldName];
 		},
-		back:function(){
-			var viewName=_props.history.back();
-			_private.display(viewName,false);
+		back : function() {
+			var viewName = _props.history.back();
+			if(viewName != undefined) {
+				_private.display(viewName, false);
+			}
 		},
 		reset : function(name) {
 			_props._views[name] = new mvc.cls._view(name);
@@ -74,14 +84,14 @@ mvc.ext(mvc.cls, "view", function() {
 			if(_private.isViewExisted(name) === false) {
 				return;
 			}
-			mvc.log.i("Current Loading View:"+name);
+			mvc.log.i("Current Loading View:" + name);
 			var view = _props.viewRendering = _private.get(name);
 			view.load(function() {
-				mvc.log.i("Intended Rendering View:"+view.getName());
+				mvc.log.i("Intended Rendering View:" + view.getName());
 				if(_props.viewRendering.getName() == view.getName()) {
 					view.render();
-				}else{
-					var tmp="View Render Interrupted for:"+view.getName();
+				} else {
+					var tmp = "View Render Interrupted for:" + view.getName();
 					mvc.log.i(tmp);
 				}
 			});
@@ -109,25 +119,30 @@ mvc.ext(mvc.cls, "view", function() {
 				return false;
 			}
 		},
-		display : function(name,forward) {
+		display : function(name, forward) {
 			if(!_public.isViewExisted(name)) {
 				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
 				return;
 			}
 			try {
 				var view = _public.get(name);
+				var oldView=_props.curView;
 				_props.curView = view;
-				var func=mvc.opt.interfaces.goForwPage;
-				if (forward===false){
-					func=mvc.opt.interfaces.goBackPage;					
+				var func = mvc.opt.interfaces.goForwPage;
+				if(forward === false) {
+					func = mvc.opt.interfaces.goBackPage;
+				} else {
+					if (oldView!=null){
+						_props.history.push(oldView.getName());
+					}
 				}
 				view.display(func);
 			} catch(e) {
-				mvc.log.e(e,"Display View",name);
+				mvc.log.e(e, "Display View", name);
 			}
 
 		}
 	};
-
+	_private.init();
 	return _public;
 });

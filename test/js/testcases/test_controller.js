@@ -7,6 +7,10 @@ mvc.ext(mvc.controllers,"myCtl",{
 		};
 		
 		return sum;
+	},
+	funcb:function(a,b){
+		console.log(a+b);
+		this.funca();
 	}
 	
 })
@@ -25,14 +29,14 @@ describe("controller",function(){
 		index++;
 	})
 	it ("can send synchronous/asynchronous message",function(){
-		view.bind("init","addBtns",function(html){
+		view.bind("beforeParse","addBtns",function(html){
 			html.html="<input type='button' value='sync' id='btn1'/><br/><input type='button' value='async' id='btn2'/>";
 		})
 		view.bind("displayed","addEvents",function(){
 			var page=view.page();
 			page.find("#btn1").click(function(){
 				var data1=new Date();
-				var res=mvc.ctl("myCtl").sendMSG("funca");
+				var res=mvc.ctl("myCtl").sendMSG("funcb",[3,5]);
 				var data2=new Date();
 				var span=data2.getTime()-data1.getTime();
 				console.log("time consumed:"+span);
@@ -41,7 +45,7 @@ describe("controller",function(){
 			});
 			page.find("#btn2").click(function(){
 				var data1=new Date();
-				mvc.ctl("myCtl").postMSG("funca",undefined,function(res){
+				mvc.ctl("myCtl").postMSG("funcb",[4,10],function(res){
 					var data3=new Date();
 					console.log("time consumed:"+(data3.getTime()-data1.getTime()));
 					console.log("result:"+res);

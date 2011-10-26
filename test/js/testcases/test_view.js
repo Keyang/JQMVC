@@ -7,9 +7,14 @@ describe("View", function() {
 
 	})
 	afterEach(function() {
-		var name=view.getName();
+		var name = view.getName();
 		mvc.view.loadRender(name);
 		i++;
+	})
+	it("can bind global event", function() {
+		mvc.view.event.bind("displayed", "addHtml", function() {
+			this.page().append("<p>added content</p>");
+		})
 	})
 	it("can create new view", function() {
 		mvc.view.get("test");
@@ -33,21 +38,30 @@ describe("View", function() {
 		});
 	})
 	it("can render a loaded view", function() {
-		var o=i-1;
-		test1View = mvc.view.get("bindEvent"+o);
-		test1View.bind("init", "myInit", function(html) {
-			html.html = "<p>html has been changed</p>";
+		var o = i - 1;
+		test1View = mvc.view.get("bindEvent" + o);
+		test1View.bind("beforeParse", "myInit", function(html) {
+			//html.html = "<p>html has been changed</p>";
+			console.log("aa");
 		})
 		test1View.load(function() {
 			test1View.render();
 		});
 	})
 	it("can change wrapped tag", function() {
-		mvc.view.changeName("bindEvent"+i,"changedName");
+		mvc.view.changeName("bindEvent" + i, "changedName");
 		view.setOptions({
-			"wrapperTag":"p"
+			"wrapperTag" : "p"
 		});
+		view.bind("beforeParse","myInit",function(){
+			console.log("bb");
+		})
 	})
+	it("can run code in view html file", function() {
+		view.bind("beforeParse", "addHtml", function(html) {
+			html.html = "<p><?mvc echo('hello'); echo ('this is a test'); ?></p>";
+		}); 
+	});
 	describe("view events", function() {
 		it("can bind/replace an event", function() {
 			view.bind("init", "testInit", function(html) {

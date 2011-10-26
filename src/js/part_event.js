@@ -18,9 +18,10 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
 		 * @param async whether fire the events asynchrously. default is true
+		 * @param scope scope that will be used for event handler. (this)
 		 */
-		fire : function(eventType, param, key,async) {
-			return _private.fire(eventType, param, key,async);
+		fire : function(eventType, param, key,async,scope) {
+			return _private.fire(eventType, param, key,async,scope);
 		},
 		/**
 		 * same as bind. It will return directly if specified key existed already.
@@ -39,13 +40,14 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 * Unbind a handler. if Key is ommited all handlers to that eventType will be unbound.
 		 */
 		unbind : function(eventType, key) {
-			if(key != undefined) {
-
-			}
-		}
+			return _private.unbind(eventType,key);
+		},
 	};
 
 	var _private = {
+		setScope:function(scope){
+			_props.scope=scope;
+		},
 		unbind : function(eventType, key) {
 			if(key != undefined) {
 				delete _props.events[eventType][key];
@@ -60,20 +62,19 @@ mvc.ext(mvc.cls, "event", function(that) {
 			_props.events[eventType][key] = func;
 			return true;
 		},
-		fire : function(eventType, param, key,async) {
+		fire : function(eventType, param, key,async,scope) {
 			function proc(){
 				if(_props.events[eventType] == undefined) {
-					mvc.log.e(mvc.string.error.event.etnf, "EventType", eventType);
 					return;
 				}
 				var _funcs = _props.events[eventType];
 				if(key != undefined) {
 					var func = funcs[key];
-					_private.exec(func, param);
+					_private.exec(func, param,scope);
 				} else {
 					for(var key in _funcs) {
 						var func = _funcs[key];
-						_private.exec(func, param);
+						_private.exec(func, param,scope);
 					}
 				}
 			}
@@ -87,15 +88,18 @@ mvc.ext(mvc.cls, "event", function(that) {
 			}
 			
 		},
-		exec : function(func, param) {
+		exec : function(func, param,scope) {
 			if(param == undefined) {
 				param = []
+			}
+			if (scope==undefined){
+				scope=_props.scope;
 			}
 			if(!( param instanceof Array)) {
 				param = [param];
 			}
 			try {
-				func.apply(_props.scope, param);
+				func.apply(scope, param);
 			} catch(e) {
 				mvc.log.e(e, "Execute event handler", func.toString());
 			}
