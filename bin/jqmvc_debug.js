@@ -795,21 +795,6 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 */
 		page : function(selector) {
 			return _private.page(selector);
-		},
-		/**
-		 * set "this" to function scope
-		 */
-		callback : function(func, that) {
-			if( typeof (that) == "undefined") {
-				that = this;
-			}
-			return function() {
-				func.apply(that, arguments);
-
-			}
-		},
-		viewer : function() {
-			return $.mvc.curViewer;
 		}
 	};
 

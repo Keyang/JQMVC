@@ -8,7 +8,7 @@ import sys;
 import urllib2;
 
 
-PATH_PREFIX = "../src";
+PATH_PREFIX = "";
 YUI_COMPRESSOR_PATH = "../lib/yui.jar";
 SCRIPT_PATTERN = re.compile(r"(<script)(.*?)(src=)([\"|'])(.*?)([\"|'])(.*?)(>(</script>)?)");
 CSS_PATTERN = re.compile(r"(<link)(.*?)(href=)([\"|'])(.*?)([\"|'])(.*?)(>)");
@@ -124,7 +124,13 @@ def main():
   if not os.path.exists(YUI_COMPRESSOR_PATH):
     print("Can not find file " + YUI_COMPRESSOR_PATH);
     sys.exit(2);
+  if len(sys.argv)!=2:
+      print("Usage: pythong build.py {core|plugin}");
+      sys.exit(3);
   
+  global PATH_PREFIX;
+  PATH_PREFIX='../'+sys.argv[1];
+  print ("Start to build folder:"+PATH_PREFIX);
   readIndexFile();
   
   
