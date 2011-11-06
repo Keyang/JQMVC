@@ -89,7 +89,8 @@ mvc.ext(mvc.cls, "view", function() {
 			view.load(function() {
 				mvc.log.i("Intended Rendering View:" + view.getName());
 				if(_props.viewRendering.getName() == view.getName()) {
-					view.render();
+					view.loadDom();
+					_private.display(name,true);
 				} else {
 					var tmp = "View Render Interrupted for:" + view.getName();
 					mvc.log.i(tmp);
@@ -126,17 +127,8 @@ mvc.ext(mvc.cls, "view", function() {
 			}
 			try {
 				var view = _public.get(name);
-				var oldView=_props.curView;
 				_props.curView = view;
-				var func = mvc.opt.interfaces.goForwPage;
-				if(forward === false) {
-					func = mvc.opt.interfaces.goBackPage;
-				} else {
-					if (oldView!=null){
-						_props.history.push(oldView.getName());
-					}
-				}
-				view.display(func);
+				view.display(forward);
 			} catch(e) {
 				mvc.log.e(e, "Display View", name);
 			}

@@ -65,18 +65,26 @@ mvc.ext(mvc.cls, "event", function(that) {
 		fire : function(eventType, param, key,async,scope) {
 			function proc(){
 				if(_props.events[eventType] == undefined) {
-					return;
+					return param;
 				}
 				var _funcs = _props.events[eventType];
+				var res=param;
 				if(key != undefined) {
 					var func = funcs[key];
-					_private.exec(func, param,scope);
+					res=_private.exec(func, param,scope);
 				} else {
 					for(var key in _funcs) {
 						var func = _funcs[key];
-						_private.exec(func, param,scope);
+						res=_private.exec(func, res,scope);
+						if (res===undefined){
+							res=param;
+						}
 					}
 				}
+				if (res===undefined){
+					res=param;
+				}
+				return res;
 			}
 			if (async==undefined){
 				async=true;
@@ -84,7 +92,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 			if (async===true){
 				setTimeout(proc, 0);
 			}else{
-				proc();
+				return proc();
 			}
 			
 		},
@@ -99,7 +107,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 				param = [param];
 			}
 			try {
-				func.apply(scope, param);
+				return func.apply(scope, param);
 			} catch(e) {
 				mvc.log.e(e, "Execute event handler", func.toString());
 			}
