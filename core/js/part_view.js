@@ -2,11 +2,11 @@
  * View Definition
  * part_view.js
  */
-mvc.ext(mvc.cls, "view", function() {
+mvc.ext(mvc.cls, "viewMgr", function() {
 	var _public = {
 		/**
 		 * Get or created a view with specific name & Push created view to view manager.
-		 * If no name is given, current view will be returned. If current view is not set, null will return.
+		 * If no name is given, current view (displayed) will be returned. If current view is not set, null will return.
 		 * If a new name is given, a new view will be created.
 		 */
 		get : function(name) {
@@ -19,35 +19,59 @@ mvc.ext(mvc.cls, "view", function() {
 			return _private.isViewExisted(name);
 		},
 		/**
-		 * Try to display loaded view.
+		 * Init a new view. it will replace existing one.
 		 */
-		display : function(name) {
-			return _private.display(name);
-		},
-		/**
-		 * load and render a specified view. This will be managed by view ctl. Last loaded view will be displayed.
-		 * @param name name of the view
-		 */
-		loadRender : function(name) {
-			return _private.loadRender(name);
-		},
-		/**
-		 * Reset specified view with default view object.
-		 */
-		reset : function(name) {
+		init : function(name) {
 			return _private.reset(name);
 		},
 		/**
-		 * go back to last view.
+		 * display last view in history stack.
 		 */
 		back : function() {
 			return _private.back();
+		},
+		clearHistory : function() {
+			return _private.clearHistory();
 		},
 		/**
 		 * Change the name of view.
 		 */
 		changeName : function(oldName, newName) {
 			return _private.changeName(oldName, newName);
+		},
+		/**
+		 * preload views
+		 * @param view array.
+		 * @param async. default true
+		 */
+		preLoad : function(viewArr, async) {
+			return _private.preLoad(viewArr,async);
+		},
+		/**
+		 * preload all views
+		 * @param async. default true
+		 */
+		preLoadAll : function(async) {
+			return _private.preLoadAll(async);
+		},
+		/**
+		 * setup the cls of page
+		 * @param str class name
+		 */
+		setPageCls : function(str) {
+			return _private.setPageCls(str);
+		},
+		/**
+		 * get the cls of page
+		 */
+		getPageCls : function() {
+			return _private.getPageCls();
+		},
+		/**
+		 * clear all views, history, dom
+		 */
+		clearAll : function() {
+			return _private.clearAll();
 		}
 		//Event interfaces
 	}
@@ -55,13 +79,65 @@ mvc.ext(mvc.cls, "view", function() {
 	var _props = {
 		curView : null,
 		_views : {},
-		viewRendering : null,
 		history : new mvc.cls.history(),
-		events : new mvc.cls.event()
+		events : new mvc.cls.event(),
+		pageCls : "page"
 	};
 	var _private = {
+		preLoad : function(viewArr, async) {
+			for (var i=0;i<viewArr.length;i++){
+				var view=viewArr[i];
+				if (async===false){
+					view.loadDom();
+				}else{
+					(function(){
+						var v=view;
+						setTimeout(function(){
+							v.loadDom();
+						},1)
+					})();
+				}
+			}
+		},
+		preLoadAll : function(async) {
+			_private.each(function(v) {
+				if(async === false) {
+					v.loadDom();
+				} else {
+					setTimeout(function() {
+						v.loadDom();
+					}, 1);
+				}
+			})
+		},
+		each : function(func) {
+			for(var key in _props._views) {
+				func(_props._views[key]);
+			}
+		},
+		clearAll : function() {
+			_private.each(function(v) {
+				v.remove();
+			})
+			_private.clearHistory();
+			_props._views = {};
+			_props.curView = null;
+		},
+		getPageCls : function() {
+			return _props.pageCls;
+		},
+		clearHistory : function() {
+			_props.history.clear();
+		},
 		init : function() {
-			_public['event'] = _props.events;
+			_public['events'] = _props.events;
+			_public.events.bind("displayed", "_history_event", function() {
+				var curView = _private.get();
+				if(curView != null) {
+					_props.history.push(curView.getName());
+				}
+				_props.curView = this;
+			})
 		},
 		changeName : function(oldName, newName) {
 			var view = _private.get(oldName);
@@ -74,28 +150,12 @@ mvc.ext(mvc.cls, "view", function() {
 		back : function() {
 			var viewName = _props.history.back();
 			if(viewName != undefined) {
-				_private.display(viewName, false);
+				_private.get(viewName).display(false);
 			}
+			return viewName;
 		},
 		reset : function(name) {
-			_props._views[name] = new mvc.cls._view(name);
-		},
-		loadRender : function(name) {
-			if(_private.isViewExisted(name) === false) {
-				return;
-			}
-			mvc.log.i("Current Loading View:" + name);
-			var view = _props.viewRendering = _private.get(name);
-			view.load(function() {
-				mvc.log.i("Intended Rendering View:" + view.getName());
-				if(_props.viewRendering.getName() == view.getName()) {
-					view.loadDom();
-					_private.display(name,true);
-				} else {
-					var tmp = "View Render Interrupted for:" + view.getName();
-					mvc.log.i(tmp);
-				}
-			});
+			return _props._views[name] = new mvc.cls._view(name);
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -119,20 +179,6 @@ mvc.ext(mvc.cls, "view", function() {
 			} else {
 				return false;
 			}
-		},
-		display : function(name, forward) {
-			if(!_public.isViewExisted(name)) {
-				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
-				return;
-			}
-			try {
-				var view = _public.get(name);
-				_props.curView = view;
-				view.display(forward);
-			} catch(e) {
-				mvc.log.e(e, "Display View", name);
-			}
-
 		}
 	};
 	_private.init();

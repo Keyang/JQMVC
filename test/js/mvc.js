@@ -48,14 +48,11 @@ _app_={ // Settings
      */
     goForwPage: function(pageID) {
       var jQueryObj=$("#"+pageID);
-      jQueryObj.show();
       var curPage=$(".currentPage");
       if (curPage.length>0) {
-        curPage.addClass("hidePage");
         curPage.removeClass("currentPage");
       }
       jQueryObj.addClass("currentPage");
-      jQueryObj.removeClass("hidePage");
     },
     /**
      * This is invoked when framework receives a "back" action. e.g. If you have different animation for goFowardPage and goBackPage, you should set up them differently.

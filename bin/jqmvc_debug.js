@@ -1,3 +1,6 @@
+/**
+ * part_basic.js
+ */
 (function (parent,opt){
 	var nameSpace="mvc";
 	parent[nameSpace]={};
@@ -17,6 +20,13 @@
 	obj.opt=opt;
 })(window,_app_)
 mvc.ext(mvc,"cls",{});
+mvc.ext(mvc,"$",function(selector){
+	if (selector != undefined){
+		return $(mvc.opt.appContainer).find(selector);
+	}else{
+		return $(mvc.opt.appContainer);
+	}
+})
 mvc.ext(mvc,"util",{
 	text:{
 		format:function(){
@@ -287,45 +297,46 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 * @param eventType event type that will be bound.
 		 * @param key identifier of the handler.
 		 * @param func callback handler.
+		 * @param override existed function. default true
 		 */
-		bind : function(eventType, key, func) {
-			return _private.bind(eventType, key, func);
+		bind : function(eventType, key, func, override) {
+			return _private.bind(eventType, key, func, override);
 		},
 		/**
 		 * fire an event.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
-		 * @param async whether fire the events asynchrously. default is true
+		 * @param async whether fire the events asynchrously. default is false
 		 * @param scope scope that will be used for event handler. (this)
 		 */
-		fire : function(eventType, param, key,async,scope) {
-			return _private.fire(eventType, param, key,async,scope);
+		fire : function(eventType, param, key, async, scope) {
+			return _private.fire(eventType, param, key, async, scope);
 		},
 		/**
-		 * same as bind. It will return directly if specified key existed already.
+		 * It will unbind itself if it has been fired.
 		 * @param eventType event type that will be bound.
 		 * @param key identifier of the handler.
 		 * @param func handler.
+		 * @param override existed function. default true
 		 */
-		bindOnce : function(eventType, key, func) {
-			if(_private.eventExists(eventType, key)) {
-				return false;
-			} else {
-				return _public.bind(eventType, key, func);
-			}
+		bindFireOnce : function(eventType, key, func, override) {
+			return _public.bind(eventType, key, function() {
+				_public.unbind(eventType, key);
+				return func.apply(this, arguments);
+			}, override);
 		},
 		/**
 		 * Unbind a handler. if Key is ommited all handlers to that eventType will be unbound.
 		 */
 		unbind : function(eventType, key) {
-			return _private.unbind(eventType,key);
+			return _private.unbind(eventType, key);
 		},
 	};
 
 	var _private = {
-		setScope:function(scope){
-			_props.scope=scope;
+		setScope : function(scope) {
+			_props.scope = scope;
 		},
 		unbind : function(eventType, key) {
 			if(key != undefined) {
@@ -334,53 +345,61 @@ mvc.ext(mvc.cls, "event", function(that) {
 				_props.events[eventType] = {};
 			}
 		},
-		bind : function(eventType, key, func) {
+		bind : function(eventType, key, func, override) {
+			if(override == undefined) {
+				override = true;
+			}
 			if(_props.events[eventType] == undefined) {
-				_props.events[eventType]={};
+				_props.events[eventType] = {};
+			}
+			if(_props.events[eventType][key] != undefined) {
+				if(override === false) {
+					return true;
+				}
 			}
 			_props.events[eventType][key] = func;
 			return true;
 		},
-		fire : function(eventType, param, key,async,scope) {
-			function proc(){
+		fire : function(eventType, param, key, async, scope) {
+			function proc() {
 				if(_props.events[eventType] == undefined) {
 					return param;
 				}
 				var _funcs = _props.events[eventType];
-				var res=param;
+				var res = param;
 				if(key != undefined) {
 					var func = funcs[key];
-					res=_private.exec(func, param,scope);
+					res = _private.exec(func, param, scope);
 				} else {
 					for(var key in _funcs) {
 						var func = _funcs[key];
-						res=_private.exec(func, res,scope);
-						if (res===undefined){
-							res=param;
+						res = _private.exec(func, res, scope);
+						if(res === undefined) {
+							res = param;
 						}
 					}
 				}
-				if (res===undefined){
-					res=param;
+				if(res === undefined) {
+					res = param;
 				}
 				return res;
 			}
-			if (async==undefined){
-				async=true;
+
+			if(async == undefined) {
+				async = false;
 			}
-			if (async===true){
+			if(async === true) {
 				setTimeout(proc, 0);
-			}else{
+			} else {
 				return proc();
 			}
-			
 		},
-		exec : function(func, param,scope) {
+		exec : function(func, param, scope) {
 			if(param == undefined) {
 				param = []
 			}
-			if (scope==undefined){
-				scope=_props.scope;
+			if(scope == undefined) {
+				scope = _props.scope;
 			}
 			if(!( param instanceof Array)) {
 				param = [param];
@@ -570,11 +589,11 @@ mvc.ext(mvc.cls, "uidata", function() {
  * View Definition
  * part_view.js
  */
-mvc.ext(mvc.cls, "view", function() {
+mvc.ext(mvc.cls, "viewMgr", function() {
 	var _public = {
 		/**
 		 * Get or created a view with specific name & Push created view to view manager.
-		 * If no name is given, current view will be returned. If current view is not set, null will return.
+		 * If no name is given, current view (displayed) will be returned. If current view is not set, null will return.
 		 * If a new name is given, a new view will be created.
 		 */
 		get : function(name) {
@@ -587,35 +606,59 @@ mvc.ext(mvc.cls, "view", function() {
 			return _private.isViewExisted(name);
 		},
 		/**
-		 * Try to display loaded view.
+		 * Init a new view. it will replace existing one.
 		 */
-		display : function(name) {
-			return _private.display(name);
-		},
-		/**
-		 * load and render a specified view. This will be managed by view ctl. Last loaded view will be displayed.
-		 * @param name name of the view
-		 */
-		loadRender : function(name) {
-			return _private.loadRender(name);
-		},
-		/**
-		 * Reset specified view with default view object.
-		 */
-		reset : function(name) {
+		init : function(name) {
 			return _private.reset(name);
 		},
 		/**
-		 * go back to last view.
+		 * display last view in history stack.
 		 */
 		back : function() {
 			return _private.back();
+		},
+		clearHistory : function() {
+			return _private.clearHistory();
 		},
 		/**
 		 * Change the name of view.
 		 */
 		changeName : function(oldName, newName) {
 			return _private.changeName(oldName, newName);
+		},
+		/**
+		 * preload views
+		 * @param view array.
+		 * @param async. default true
+		 */
+		preLoad : function(viewArr, async) {
+			return _private.preLoad(viewArr,async);
+		},
+		/**
+		 * preload all views
+		 * @param async. default true
+		 */
+		preLoadAll : function(async) {
+			return _private.preLoadAll(async);
+		},
+		/**
+		 * setup the cls of page
+		 * @param str class name
+		 */
+		setPageCls : function(str) {
+			return _private.setPageCls(str);
+		},
+		/**
+		 * get the cls of page
+		 */
+		getPageCls : function() {
+			return _private.getPageCls();
+		},
+		/**
+		 * clear all views, history, dom
+		 */
+		clearAll : function() {
+			return _private.clearAll();
 		}
 		//Event interfaces
 	}
@@ -623,13 +666,65 @@ mvc.ext(mvc.cls, "view", function() {
 	var _props = {
 		curView : null,
 		_views : {},
-		viewRendering : null,
 		history : new mvc.cls.history(),
-		events : new mvc.cls.event()
+		events : new mvc.cls.event(),
+		pageCls : "page"
 	};
 	var _private = {
+		preLoad : function(viewArr, async) {
+			for (var i=0;i<viewArr.length;i++){
+				var view=viewArr[i];
+				if (async===false){
+					view.loadDom();
+				}else{
+					(function(){
+						var v=view;
+						setTimeout(function(){
+							v.loadDom();
+						},1)
+					})();
+				}
+			}
+		},
+		preLoadAll : function(async) {
+			_private.each(function(v) {
+				if(async === false) {
+					v.loadDom();
+				} else {
+					setTimeout(function() {
+						v.loadDom();
+					}, 1);
+				}
+			})
+		},
+		each : function(func) {
+			for(var key in _props._views) {
+				func(_props._views[key]);
+			}
+		},
+		clearAll : function() {
+			_private.each(function(v) {
+				v.remove();
+			})
+			_private.clearHistory();
+			_props._views = {};
+			_props.curView = null;
+		},
+		getPageCls : function() {
+			return _props.pageCls;
+		},
+		clearHistory : function() {
+			_props.history.clear();
+		},
 		init : function() {
-			_public['event'] = _props.events;
+			_public['events'] = _props.events;
+			_public.events.bind("displayed", "_history_event", function() {
+				var curView = _private.get();
+				if(curView != null) {
+					_props.history.push(curView.getName());
+				}
+				_props.curView = this;
+			})
 		},
 		changeName : function(oldName, newName) {
 			var view = _private.get(oldName);
@@ -642,28 +737,12 @@ mvc.ext(mvc.cls, "view", function() {
 		back : function() {
 			var viewName = _props.history.back();
 			if(viewName != undefined) {
-				_private.display(viewName, false);
+				_private.get(viewName).display(false);
 			}
+			return viewName;
 		},
 		reset : function(name) {
-			_props._views[name] = new mvc.cls._view(name);
-		},
-		loadRender : function(name) {
-			if(_private.isViewExisted(name) === false) {
-				return;
-			}
-			mvc.log.i("Current Loading View:" + name);
-			var view = _props.viewRendering = _private.get(name);
-			view.load(function() {
-				mvc.log.i("Intended Rendering View:" + view.getName());
-				if(_props.viewRendering.getName() == view.getName()) {
-					view.loadDom();
-					_private.display(name,true);
-				} else {
-					var tmp = "View Render Interrupted for:" + view.getName();
-					mvc.log.i(tmp);
-				}
-			});
+			return _props._views[name] = new mvc.cls._view(name);
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -687,20 +766,6 @@ mvc.ext(mvc.cls, "view", function() {
 			} else {
 				return false;
 			}
-		},
-		display : function(name, forward) {
-			if(!_public.isViewExisted(name)) {
-				mvc.log.e(mvc.string.error.view["vnex"], "Display View", name);
-				return;
-			}
-			try {
-				var view = _public.get(name);
-				_props.curView = view;
-				view.display(forward);
-			} catch(e) {
-				mvc.log.e(e, "Display View", name);
-			}
-
 		}
 	};
 	_private.init();
@@ -710,14 +775,20 @@ mvc.ext(mvc.cls, "view", function() {
  * user view class
  * part_viewcls.js
  */
-mvc.ext(mvc.cls, "_view", function(name) {
+mvc.ext(mvc.cls, "_view", function(name, domEvent) {
 	var _public = {
+		/**
+		 * Synchorously load / render / display current view.
+		 */
+		show:function(){
+			return _private.show();
+		},
 		/**
 		 * fire an event.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
-		 * @param async whether fire the events asynchrously. default is true
+		 * @param async whether fire the events asynchrously. default is false
 		 */
 		fire : function(eventType, param, key, async) {
 			return _private.fire(eventType, param, key, async);
@@ -734,32 +805,25 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * @param forward Is page go forward or backward.
 		 */
 		display : function(forward) {
-			try {
-				if(forward === false) {
-					func = mvc.opt.interfaces.goBackPage;
-				} else {
-					func = mvc.opt.interfaces.goForwPage;
-				}
-				func(_props.name);
-				_public.fire("displayed");
-			} catch(e) {
-				mvc.log.e(e, "Display View", _props.name);
-			}
+			return _private.display(forward);
 		},
 		/**
-		 * Asynchrously and forcely load view to memory. callback when it is done.
-		 * @param func: callback function
+		 * Asynchrously and forcely load view to memory. "loaded" event will be triggered if it is done.
 		 * @param isReload: forcely reload
+		 * @param cb: callback func once loaded
 		 */
-		load : function(func,isReload) {
-			return _private.load(func,isReload);
+		load : function(isReload) {
+			return _private.load(isReload);
 		},
 		/**
 		 * Load stored html to dom.
+		 * @param isReload. default false.
 		 */
-		loadDom : function() {
-			$(mvc.opt.appContainer).find("#" + _public.getName()).remove();
-			$(mvc.opt.appContainer).append(_props.htmlCode);
+		loadDom : function(isReload) {
+			return _private.loadDom(isReload);
+		},
+		removeDom : function() {
+			return _private.removeDom();
 		},
 		getName : function() {
 			return _props.name;
@@ -785,75 +849,152 @@ mvc.ext(mvc.cls, "_view", function(name) {
 		 * Return a jQuery Object within current view
 		 * page container will be returned if no selector given.
 		 */
-		page : function(selector) {
+		$ : function(selector) {
 			return _private.page(selector);
+		},
+		/**
+		 * remove this view
+		 */
+		remove:function(){
+			return _private.remove();
 		}
 	};
 
 	var _props = {
 		"name" : name,
 		"param" : {},
-		"loadStatus" : "init",
-		"eventObj" : {},
+		"loadStatus" : "init", // init,  loading, parsing, loaded
+		"eventObj" : {}, // beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
 		"initOnce" : false,
 		"uidataPath" : null,
 		"htmlPagePath" : null,
 		"uidata" : null,
-		"event" : new mvc.cls.event(_public),
+		"events" : new mvc.cls.event(_public),
 		"wrapperTag" : "div",
 		"htmlCode" : "",
 		"isUIdataLoaded" : false
 	};
 	var _private = {
-		deferExec:function(func){
-			if ("loaded"===_props.loadStatus){
-				if (func!=undefined){
+		remove:function(){
+			_private.removeDom();
+			_props.loadStatus="removed";
+			for (var key in _public){
+				_public[key]=function(){};
+			}
+		},
+		display:function(forward){
+			var obj=_private.page();
+			if (obj.length==0){
+				_private.loadDom(true);
+			}
+			try {
+				if(forward === false) {
+					func = mvc.opt.interfaces.goBackPage;
+				} else {
+					func = mvc.opt.interfaces.goForwPage;
+				}
+				func(_props.name);
+				_public.fire("displayed", {}, undefined, false);
+			} catch(e) {
+				mvc.log.e(e, "Display View", _props.name);
+			}
+		},
+		show:function(){
+			_private.load();
+			_private.loadDom();
+			_private.display(true);
+		},
+		loadDom : function(isReload) {
+			if (isReload==undefined){
+				isReload=false;
+			}
+			if (_props.loadStatus!="loaded"){
+				_private.removeDom();
+				_private.load(true);
+			}
+			if(_props.loadStatus === "loaded") {
+				if(mvc.$("#" + _public.getName()).length === 0 || isReload===true) {
+					mvc.$().append(_props.htmlCode);
+					_public.fire("domReady", _public.$(), undefined, false);
+				}
+				return;
+				
+			}else{
+				mvc.log.e("Cannot load view properly.","view name:",_public.getName());
+			}
+			
+		},
+		deferExec : function(func) {
+			if("loaded" === _props.loadStatus) {
+				if(func != undefined) {
 					func();
 				}
-			}else if ("beforeLoad"===_props.loadStatus || "beforeParse" === _props.loadStatus || "afterParse"===_props.loadStatus){
-				if (func!=undefined){
-					_public.bind("loaded","_tmpCb",function(){
-						_public.unbind("loaded","_tmpCb");
+			} else if("beforeLoad" === _props.loadStatus || "beforeParse" === _props.loadStatus || "afterParse" === _props.loadStatus) {
+				if(func != undefined) {
+					_public.bind("loaded", "_tmpCb", function() {
+						_public.unbind("loaded", "_tmpCb");
 						func();
 					})
 				}
 			}
 		},
-		load:function(func,isReload){
-			if (isReload===true){
-				_props.loadStatus="init";
+		load : function(isReload) {
+			if(isReload === true) {
+				_props.loadStatus = "init";
+				_props.htmlCode = "";
 			}
-			if ("init"!=_props.loadStatus){
-				_private.deferExec(func);
-				return ;
+			if("loaded" === _props.loadStatus) {
+				return;
 			}
-			_private.loadView(function() {
-				/*_props.event.fire("updated")
-				var curView = mvc.view.get();
-				if(curView != null) {
-					if(curView.getName() === _props.name) {
-						_public.page().show();
-					}
-				}*/
-				if(func != undefined) {
-					func();
+			if("init" != _props.loadStatus) {
+				return;
+			}
+			var path = _private.getHtmlPagePath();
+			var pageID = _props.name;
+			var layoutPath = mvc.opt.layoutPath + "/" + _props.layout + ".html";
+			if(_props.initOnce === true && $("#" + pageID).length > 0) {
+				try {
+					callback();
+				} catch(e) {
+					mvc.log.e(e, "loadView", path);
 				}
-
-			});
+			}
+			_public.fire("beforeLoad");
+			mvc.log.i(mvc.string.info.view.lpf + path);
+			var pageHtml = mvc.ajax.syncLoad(path);
+			if(!_props.isUIdataLoaded) {
+				_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
+			}
+			var uidata = mvc.util.copyJSON(_props.uidata);
+			var params = mvc.util.copyJSON(_props.param, uidata);
+			_props.loadStatus = "loading";
+			pageHtml = _public.fire("beforeParse", pageHtml, undefined, false);
+			var parsedPageHtml = mvc.parser.parseHtml(pageHtml, params);
+			_props.loadStatus = "parsing";
+			parsedPageHtml = _public.fire("afterParse", parsedPageHtml, undefined, false);
+			var finalHtml = mvc.util.text.format("<{1} id='{0}' class='{3}'>{4}</{2}>", pageID,  _props.wrapperTag, _props.wrapperTag,mvc.viewMgr.getPageCls(),parsedPageHtml);
+			_props.htmlCode = finalHtml;
+			_props.loadStatus = "loaded";
+			_public.fire("loaded", {}, undefined, false);
 		},
 		page : function(selector) {
+			if(mvc.$("#" + _props.name).length==0) {
+				mvc.log.e("View DOM is not ready.", "View:", _public.getName());
+				return;
+			}
 			if( typeof selector == "undefined") {
-				return $(mvc.opt.appContainer).find("#" + _props.name);
+				return mvc.$("#" + _props.name);
 			} else {
-				return $(mvc.opt.appContainer).find("#" + _props.name).find(selector);
+				return mvc.$("#" + _props.name).find(selector);
 			}
 		},
 		removeDom : function() {
-			_private.page().remove();
+				mvc.$("#" + _props.name).remove();
 		},
 		fire : function(eventType, param, key, async) {
-			var res=_props.event.fire(eventType, param, key, async);
-			return mvc.view.event.fire(eventType, res, key, async, _public);
+			var res = mvc.viewMgr.events.fire(eventType, param, key, async, _public);
+			return _props.events.fire(eventType, res, key, async);
+			 
 		},
 		setOptions : function(opt) {
 			for(var key in opt) {
@@ -873,16 +1014,7 @@ mvc.ext(mvc.cls, "_view", function(name) {
 
 		},
 		init : function() {
-			mvc.util.copyJSON(_props.event, _public, false);
-			_public.bind("beforeLoad","_changeStatus",function(){
-				_props.loadStatus="loading";
-			});
-			_public.bind("beforeParse","_changeStatus",function(){
-				_props.loadStatus="parsing";
-			});
-			_public.bind("loaded","_changeStatus",function(){
-				_props.loadStatus="loaded";
-			});
+			mvc.util.copyJSON(_props.events, _public, false);
 		},
 		getUIDataPath : function() {
 			if(_props.uidataPath == null) {
@@ -898,38 +1030,6 @@ mvc.ext(mvc.cls, "_view", function(name) {
 				return _props.htmlPagePath;
 			}
 
-		},
-		loadView : function(callback) {
-			var path = _private.getHtmlPagePath();
-			var pageID = _props.name;
-			var layoutPath = mvc.opt.layoutPath + "/" + _props.layout + ".html";
-			if(_props.initOnce === true && $("#" + pageID).length > 0) {
-				try {
-					callback();
-				} catch(e) {
-					mvc.log.e(e, "loadView", path);
-				}
-			}
-			_public.fire("beforeLoad");
-			mvc.log.i(mvc.string.info.view.lpf + path);
-			mvc.ajax.asyncLoad(path, function(pageHtml) {
-				if(!_props.isUIdataLoaded) {
-					_props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
-				}
-				var uidata = mvc.util.copyJSON(_props.uidata);
-				var params = mvc.util.copyJSON(_props.param, uidata);
-				pageHtml=_public.fire("beforeParse", pageHtml, undefined, false);
-				var parsedPageHtml = mvc.parser.parseHtml(pageHtml, params);
-				parsedPageHtml=_public.fire("afterParse", parsedPageHtml, undefined, false);
-				var finalHtml = mvc.util.text.format("<{2} id='{0}' style='display:none'>{1}</{3}>", pageID,parsedPageHtml, _props.wrapperTag, _props.wrapperTag);
-				_props.htmlCode = finalHtml;
-				_public.fire("loaded");
-				try {
-					callback();
-				} catch(e) {
-					mvc.log.e(e, "loadView", path);
-				}
-			})
 		}
 	};
 	_private.init();
@@ -1005,4 +1105,4 @@ mvc.ext(mvc,"log", new mvc.cls._log());
 mvc.ext(mvc,"ajax",new mvc.cls.ajax());
 mvc.ext(mvc,"parser",new mvc.cls.parser());
 mvc.ext(mvc,"uidata",new mvc.cls.uidata());
-mvc.ext(mvc,"view", new mvc.cls.view());
+mvc.ext(mvc,"viewMgr", new mvc.cls.viewMgr());

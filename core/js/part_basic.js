@@ -1,3 +1,6 @@
+/**
+ * part_basic.js
+ */
 (function (parent,opt){
 	var nameSpace="mvc";
 	parent[nameSpace]={};
@@ -17,6 +20,13 @@
 	obj.opt=opt;
 })(window,_app_)
 mvc.ext(mvc,"cls",{});
+mvc.ext(mvc,"$",function(selector){
+	if (selector != undefined){
+		return $(mvc.opt.appContainer).find(selector);
+	}else{
+		return $(mvc.opt.appContainer);
+	}
+})
 mvc.ext(mvc,"util",{
 	text:{
 		format:function(){
