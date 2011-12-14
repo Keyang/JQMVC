@@ -1,78 +1,80 @@
 /**
  * part_basic.js
  */
-(function (parent,opt){
-	var nameSpace="mvc";
-	parent[nameSpace]={};
-	var obj=parent[nameSpace];
-	obj.ext=function(parent,key,tarObj){
-		if (typeof parent!="object"){
-			throw("mvc.ext first param should be entry object.");
+
+(function(parent, opt) {
+	var nameSpace = "mvc";
+	parent[nameSpace] = {};
+	var obj = parent[nameSpace];
+	obj.ext = function(parent, key, tarObj) {
+		if( typeof parent != "object") {
+			throw ("mvc.ext first param should be entry object.");
 		}
-		if (typeof key!="string"){
-			throw("mvc.ext second param should be key as string.");
+		if( typeof key != "string") {
+			throw ("mvc.ext second param should be key as string.");
 		}
-		if (parent[key]!=undefined){
+		if(parent[key] != undefined) {
 			mvc.log.i("Overwritten extention detected.");
 		}
-		parent[key]=tarObj;
+		parent[key] = tarObj;
 	}
-	obj.opt=opt;
-})(window,_app_)
-mvc.ext(mvc,"cls",{});
-mvc.ext(mvc,"$",function(selector){
-	if (selector != undefined){
+	obj.opt = opt;
+})(window, _app_)
+mvc.ext(mvc, "cls", {});
+mvc.ext(mvc, "$", function(selector) {
+	if(selector != undefined) {
 		return $(mvc.opt.appContainer).find(selector);
-	}else{
+	} else {
 		return $(mvc.opt.appContainer);
 	}
 })
-mvc.ext(mvc,"util",{
-	text:{
-		format:function(){
-			var args=arguments;
-			var str=args[0];
-			var rtn=str;
-			for (var i=1;i<args.length;i++){
-				var index=i-1;
-				rtn=rtn.replace("{"+index+"}",args[i]);
+mvc.ext(mvc, "util", {
+	text : {
+		format : function() {
+			var args = arguments;
+			var str = args[0];
+			var rtn = str;
+			for(var i = 1; i < args.length; i++) {
+				var index = i - 1;
+				rtn = rtn.replace("{" + index + "}", args[i]);
 			}
 			return rtn;
 		}
 	},
 	/**
 	 * deeply Copy jsonObj to toJson object
-	 * final json object will be returned 
+	 * final json object will be returned
 	 */
-	copyJSON:function (jsonObj,toJson,override) {
-      var tmpObj= {};
-      if (toJson!=undefined) {
-        tmpObj=toJson;
-      }
-      //deep clone for setting json obj
-      var tmpOri=jsonObj;
-      for (var key in tmpOri) {
-      	if(override===false){
-      		if (tmpObj[key]!=undefined){
-      			continue;
-      		}
-      	}
-        if (!mvc.util.isEmpty(tmpOri[key])) {
-          if (tmpOri[key].constructor==Object) {
-            tmpObj[key]=mvc.util.copyJSON(tmpOri[key]);
-          } else {
-            tmpObj[key]=tmpOri[key];
-          }
-        } else {
-          tmpObj[key]=tmpOri[key];
-        }
-      }
-      return tmpObj;
-    },
-    /**
-     * return true if given value is empty.
-     */
-    isEmpty: function(val) {
-      return val==undefined||val===""||val===null||val=== {};
-    }
+	copyJSON : function(jsonObj, toJson, override) {
+		var tmpObj = {};
+		if(toJson != undefined) {
+			tmpObj = toJson;
+		}
+		//deep clone for setting json obj
+		var tmpOri = jsonObj;
+		for(var key in tmpOri) {
+			if(override === false) {
+				if(tmpObj[key] != undefined) {
+					continue;
+				}
+			}
+			if(!mvc.util.isEmpty(tmpOri[key])) {
+				if(tmpOri[key].constructor == Object) {
+					tmpObj[key] = mvc.util.copyJSON(tmpOri[key]);
+				} else {
+					tmpObj[key] = tmpOri[key];
+				}
+			} else {
+				tmpObj[key] = tmpOri[key];
+			}
+		}
+		return tmpObj;
+	},
+	/**
+	 * return true if given value is empty.
+	 */
+	isEmpty : function(val) {
+		return val == undefined || val === "" || val === null || val === {};
+	}
 });
+

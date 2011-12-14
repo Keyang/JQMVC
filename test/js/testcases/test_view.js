@@ -13,14 +13,14 @@ describe("View", function() {
 	})
 	function check(func) {
 		var curView = view;
-		view.bind("displayed", "check", function() {
+		view.events.bind("displayed", "check", function() {
 			if(func) {
 				func(curView);
 			}
 		})
 	}
-
 	it("can bind global event", function() {
+		
 		//Bound function will be executed each view triggers "display" event
 		mvc.viewMgr.events.bind("domReady", "addHtml", function() {
 			console.log("name:" + this.getName() + " id:" + this.$().attr("id"));
@@ -31,43 +31,37 @@ describe("View", function() {
 		})
 	})
 	it("can change page url", function() {
-		view.setOptions({
-			"uidataPath" : "http://www.163.com?randomize=" + Math.round(Math.random() * 10000)
-		})
+		view.htmlPagePath="http://www.google.com";
 	})
 	it("can create new view", function() {
 		var curView = mvc.viewMgr.get("test");
-		curView.bind("displayed", "check", function() {
+		curView.data={value:"hello world"};
+		curView.events.bind("displayed", "check", function() {
 			expect(this.getName()).toEqual("test");
 		});
 		curView.show();
 	})
-	it("can change view name", function() {
-		var curView = mvc.viewMgr.init("test");
-		mvc.viewMgr.changeName("test", "helloworld");
-		expect(curView.getName()).toEqual("helloworld");
-	})
 	it("can render the view", function() {
-		view.bind("displayed", "checkCurView", function() {
+		view.events.bind("displayed", "checkCurView", function() {
 			expect(mvc.viewMgr.get().getName()).toEqual(view.getName());
 		})
 	})
 	it("can render view without page html file existed", function() {
-		view.bind("displayed", "checkCurView", function() {
+		view.events.bind("displayed", "checkCurView", function() {
 			expect(mvc.viewMgr.get().getName()).toEqual(view.getName());
 		})
 	})
 	it("can load DOM without display", function() {
 		var curView = mvc.viewMgr.init("test");
-		curView.bind("displayed", "fail", function() {
+		curView.data={value:"hello world"};
+		curView.events.bind("displayed", "fail", function() {
 			expect(true).toEqual(false);
 		})
 		curView.loadDom();
 		expect(curView.$().length > 0).toEqual(true);
-
 	})
 	it("allows changing the content of loaded html after parse", function() {
-		view.bind("afterParse", "test", function(html) {
+		view.events.bind("afterParse", "test", function(html) {
 			return "<p>hello world changed</p>";
 		})
 		check(function(v) {
@@ -75,10 +69,10 @@ describe("View", function() {
 		})
 	})
 	it("Change the content of loaded html before Parse", function() {
-		view.bind("beforeParse", "myInit", function(html) {
+		view.events.bind("beforeParse", "myInit", function(html) {
 			return "<p>html has been changed</p>";
 		})
-		view.bind("afterParse", "test", function(html) {
+		view.events.bind("afterParse", "test", function(html) {
 			expect(html.indexOf("<p>html has been changed</p>") > -1).toEqual(true);
 		})
 	})
@@ -91,6 +85,7 @@ describe("View", function() {
 	})
 	it("can go back to last view", function() {
 		var lastView = mvc.viewMgr.init("test");
+		lastView.data={"value":"test value"};
 		lastView.show();
 		var nextView = mvc.viewMgr.init("test1");
 		nextView.show();
@@ -140,5 +135,22 @@ describe("View", function() {
 		init();
 		mvc.viewMgr.preLoad([a,b],true);
 		//asyncorous load
+	})
+	it ("can set up params for a page",function(){
+		var test=mvc.viewMgr.get("test");
+		test.data={"value":"helloworld"};
+		test.show();
+		expect("helloworld").toEqual(test.$("span").text());
+	})
+	it ("can bind dom events to a page",function(){
+		view=mvc.viewMgr.init("blank");
+		view.echo("<input type='button' id='btn1' value='click me'/>" );
+		view.setDomEvent({
+			"#btn1":{
+				"click":function(){
+					console.log("hello test");
+				}
+			}
+		})
 	})
 })

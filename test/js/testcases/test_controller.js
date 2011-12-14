@@ -1,59 +1,31 @@
-mvc.ext(mvc.controllers,"myCtl",{
-	funca:function(){
-		var sum=1;
-		sum=1;
-		for (var i=1;i<64;i=i+0.0000001){
-			sum*=i;
+mvc.ext(mvc.controllers, "myCtl", {
+	funca : function() {
+		var sum = 1;
+		sum = 1;
+		for(var i = 1; i < 64; i = i + 0.0001) {
+			sum *= i;
 		};
-		
+
 		return sum;
 	},
-	funcb:function(a,b){
-		console.log(a+b);
-		this.funca();
+	funcb : function(a, b) {
+		return a + b;
 	}
-	
 })
 
-
-describe("controller",function(){
-	var view=null;
-	var index=0;
-	beforeEach(function(){
-		var viewName="ctl"+index;
-		view=mvc.view.get(viewName);
-	})
-	afterEach(function(){
-		var viewName=view.getName();
-		mvc.view.loadRender(viewName);
-		index++;
-	})
-	it ("can send synchronous/asynchronous message",function(){
-		view.bind("beforeParse","addBtns",function(html){
-			html.html="<input type='button' value='sync' id='btn1'/><br/><input type='button' value='async' id='btn2'/>";
+describe("controller", function() {
+	it("can send synchronous/asynchronous message", function() {
+		var view = mvc.viewMgr.init("blank");
+		view.events.bind("beforeParse", "addBtns", function(html) {
 		})
-		view.bind("displayed","addEvents",function(){
-			var page=view.page();
-			page.find("#btn1").click(function(){
-				var data1=new Date();
-				var res=mvc.ctl("myCtl").sendMSG("funcb",[3,5]);
-				var data2=new Date();
-				var span=data2.getTime()-data1.getTime();
-				console.log("time consumed:"+span);
-				console.log("result:"+res);
-				view.page().append("<p>aa</p>");
-			});
-			page.find("#btn2").click(function(){
-				var data1=new Date();
-				mvc.ctl("myCtl").postMSG("funcb",[4,10],function(res){
-					var data3=new Date();
-					console.log("time consumed:"+(data3.getTime()-data1.getTime()));
-					console.log("result:"+res);
-				})
-				var data2=new Date();
-				console.log("returned time in:"+(data2.getTime()-data1.getTime()));
-				view.page().append("<p>aa</p>");				
-			});
-		})
+		view.events.bind("displayed", "addEvents", function() {
+			var page = view.$();
+			var res = mvc.ctl("myCtl").sendMSG("funcb", [3, 5]);
+			expect(res).toEqual(8);
+			mvc.ctl("myCtl").postMSG("funcb", [4, "hello"], function(res) {
+				expect(res).toEqual("4hello");
+			})
+		});
+		view.show();
 	})
 })

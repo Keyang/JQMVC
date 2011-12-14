@@ -239,8 +239,29 @@ ul#menu li a span:hover {
 	color: #666666;
 	letter-spacing: -1px;
 }
+.downloadBtn{
+	background:url(./images/downloadbtn.gif) no-repeat;
+	width:181px;
+	height:51px;
+	cursor:pointer;
+	margin-left:auto;
+	margin-right:auto;
+	margin-top:8px;
+	margin-bottom:8px;
+
+}
 .section{
 	padding:8px;
 }
 .section .greytitlebig{
+}
+#downloadmore{
+	text-align:right;
+	
+
+}
+
+#downloadmore a{
+	color:#999;
+	font-size:11px;
 }
