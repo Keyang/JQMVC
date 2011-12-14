@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>JQMVC: Be Efficient & Logic</title>
+<link href="style.css" rel="stylesheet" type="text/css" />
+
+<script type="text/javascript" src="js/jquery1.7.js"></script>
+<!-- Let's do the animation -->
+<script type="text/javascript">
+	$(function() {
+		// set opacity to nill on page load
+		$("ul#menu span").css("opacity","0");
+		// on mouse over
+		$("ul#menu span").hover(function () {
+			// animate opacity to full
+			$(this).stop().animate({
+				opacity: 1
+			}, 'slow');
+		},
+		// on mouse out
+		function () {
+			// animate opacity to nill
+			$(this).stop().animate({
+				opacity: 0
+			}, 'slow');
+		});
+	});
+</script>
+</head>
+
+<body>
+<form id="form1" name="form1" method="post" action="">
+  <div id="wrapper">
+    <div id="topbar"></div>
+    <div id="nav"><ul id="menu">
+    	<li><a href="index.html" class="home"><span></span></a></li>
+        <li><a href="about.html" class="about"><span></span></a></li>
+        <li><a href="ipod.html" class="ipod"><span></span></a></li>
+        <li><a href="itunes.html" class="itunes"><span></span></a></li>
+        <li><a href="accessories.html" class="accessories"><span></span></a></li>
+        <li><a href="contact.html" class="contact"><span></span></a></li>
+    </ul></div>
+    
+    <div>
+    	
+    </div>
+    
+    
+    
+
+    <div id="content">
+      <div id="left" class="justify"><span class="greytitlebig">Pick Up Your MVC in JS</span><br />
+        <img src="images/mvc.gif" alt="" width="501" height="482" /><br />
+          <strong>JQMVC provides a universal way to write JS based application</strong><br />
+         	<span class="justify">JQMVC extends MVC to different areas of Javascript applications using a series of universal coding methods. With different combinations of Model-View-Controller instances, developers could easily write JS based application in same paradigm for Mobile Website, Hybird Mobile Application, Website, Node.Js etc.</span> 
+      </div>
+      <div id="right">
+      	<div class="section">
+      	<span class="greytitle">Latest Builds<span class="greytitleinfo"> (V 1.0 Beta)</span></span>
+      	<div>
+      		
+      	</div>
+      		
+      		
+	      <div class="bigbutton roundedBorder bold">
+	      	<span>Download</span>
+	      </div>
+      	</div>
+      </div>
+    </div>
+      
+
+
+ <div id="promo">
+      <div id="p1"><div style="width:60px; float:left;"><img src="images/i1.png" alt="" width="48" height="82" /></div>
+      <div style="width:195px; float:right;"><span class="greytitle">iTunes</span><br />
+        Vestibulum molestie, lorem ipsum dolor urna lobortis fringilla hendrerit, purus eros malesu adue tellus. Sem sapien vel felis. Aliquam vulputate rutrum lorem. <br />
+        <img src="images/readmore.gif" alt="" width="102" height="29" class="rightimg" /></div>
+      </div>
+      <div id="p2"><div style="width:60px; float:left;"><img src="images/i2.png" alt="" width="60" height="82" /></div>
+      <div style="width:195px; float:right;"><span class="greytitle">Photo Gallery</span><br />
+        Vestibulum molestie, lorem ipsum dolor urna lobortis fringilla hendrerit, purus eros malesu adue tellus. Sem sapien vel felis. Aliquam vulputate rutrum lorem. <br />
+      <img src="images/readmore.gif" alt="" width="102" height="29" class="rightimg" /></div></div>
+      <div id="p3"><div style="width:60px; float:left;"><img src="images/i3.png" alt="" width="35" height="82" /></div>
+      <div style="width:195px; float:right;"><span class="greytitle">iPod</span><br />
+        Vestibulum molestie, lorem ipsum dolor urna lobortis fringilla hendrerit, purus eros malesu adue tellus. Sem sapien vel felis. Aliquam vulputate rutrum lorem. <br />
+      <img src="images/readmore.gif" alt="" width="102" height="29" class="rightimg" /></div></div>
+    </div>
+  
+  
+  
+    
+    <div id="footer">Copyright © jqmvc.com.  All rights reserved. Privacy Policy.<br />
+    </div>
+  </div>
+</form>
+</body>
+</html>
