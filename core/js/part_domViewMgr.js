@@ -1,8 +1,8 @@
 /**
- * View Definition
+ * View Manager Definition
  * part_view.js
  */
-mvc.ext(mvc.cls, "viewMgr", function() {
+mvc.ext(mvc.cls, "domViewMgr", function() {
 	var _public = {
 		/**
 		 * Get or created a view with specific name & Push created view to view manager.
@@ -32,12 +32,6 @@ mvc.ext(mvc.cls, "viewMgr", function() {
 		},
 		clearHistory : function() {
 			return _private.clearHistory();
-		},
-		/**
-		 * Change the name of view.
-		 */
-		changeName : function(oldName, newName) {
-			return _private.changeName(oldName, newName);
 		},
 		/**
 		 * preload views
@@ -139,14 +133,6 @@ mvc.ext(mvc.cls, "viewMgr", function() {
 				_props.curView = this;
 			})
 		},
-		changeName : function(oldName, newName) {
-			var view = _private.get(oldName);
-			view.setOptions({
-				name : newName
-			});
-			_props._views[newName] = view;
-			delete _props._views[oldName];
-		},
 		back : function() {
 			var viewName = _props.history.back();
 			if(viewName != undefined) {
@@ -155,7 +141,7 @@ mvc.ext(mvc.cls, "viewMgr", function() {
 			return viewName;
 		},
 		reset : function(name) {
-			return _props._views[name] = new mvc.cls._view(name);
+			return _props._views[name] = new mvc.cls.view_dom(name);
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -164,7 +150,7 @@ mvc.ext(mvc.cls, "viewMgr", function() {
 			if(_props._views[name] != undefined) {
 				return _props._views[name];
 			} else {
-				var obj = new mvc.cls._view(name);
+				var obj = new mvc.cls.view_dom(name);
 				_props._views[name] = obj;
 				return obj;
 			}
