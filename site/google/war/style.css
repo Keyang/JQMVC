@@ -39,15 +39,22 @@ ul#menu {
 }
 ul#menu li {
 	float: left;
+	border-right:1px solid #ccc;
+}
+ul#menu li:last-child{
+	border-right:none;
 }
 ul#menu li a {
-	background: url(images/buttons.gif) no-repeat scroll top left;
+	
 	display: block;
 	height: 54px;
 	position: relative;
+	font-family:Arial;
+	font-size:20px;
+	text-decoration:none;
 }
 ul#menu li a span {
-	background: url(images/buttons.gif) no-repeat scroll bottom left;
+	
 	display: block;
 	position: absolute;
 	top: 0;
@@ -56,27 +63,36 @@ ul#menu li a span {
 	width: 100%;
 	z-index: 100;
 }
+ul#menu li a div{
+	text-align: center;
+	position: absolute;
+	top: 15px;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	z-index: 101;
+}
 ul#menu li a.home {
-	width: 130px;
+	width: 129px;
 }
 ul#menu li a.about {
-	width: 172px;
+	width: 171px;
 	background-position: -130px 0px;
 }
 ul#menu li a.ipod {
-	width: 125px;
+	width: 124px;
 	background-position: -302px 0px;
 }
 ul#menu li a.itunes {
-	width: 141px;
+	width: 140px;
 	background-position: -427px 0px;
 }
 ul#menu li a.accessories {
-	width: 183px;
+	width: 182px;
 	background-position: -568px 0px;
 }
 ul#menu li a.contact {
-	width: 159px;
+	width: 158px;
 	background-position: -751px 0px;
 }
 ul#menu li a.home span {
@@ -260,8 +276,33 @@ ul#menu li a span:hover {
 	
 
 }
-
 #downloadmore a{
-	color:#999;
 	font-size:11px;
+	color:#666;
+}
+a{
+	
+	font-size:15px;
+	color:#333;
+}
+
+
+.feature{
+	margin-top:10px;
+	border-top:1px solid #ccc;
+	padding-top:10px;
+}
+.normul a{
+	
+}
+.normul li{
+	margin-top:5px;
+}
+
+#promo .para{
+	height:120px;
+}
+
+#promo li{
+	
 }
