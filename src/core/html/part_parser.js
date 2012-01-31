@@ -12,7 +12,16 @@ mvc.ext(mvc.html, "parser", new (function() {
 		parseHtml : function(html, param) {
 			return _private.parseHtml(html, param);
 		},
-		
+		addScopeItem:function(key,val){
+			if (key && val){
+				_props._basic[key]=val;
+			}
+		},
+		removeScopeItem:function(key){
+			if (key && _props._basic[key]){
+				delete _props._basic[key];
+			}
+		}
 	};
 	var _props = {
 		startTag : "<?mvc",
