@@ -35,7 +35,7 @@ describe("View", function() {
 	})
 	it("can create new view", function() {
 		var curView = mvc.viewMgr.get("test");
-		curView.data={value:"hello world"};
+		curView.uidata={value:"hello world"};
 		curView.events.bind("displayed", "check", function() {
 			expect(this.getName()).toEqual("test");
 		});
@@ -53,7 +53,7 @@ describe("View", function() {
 	})
 	it("can load DOM without display", function() {
 		var curView = mvc.viewMgr.init("test");
-		curView.data={value:"hello world"};
+		curView.uidata={value:"hello world"};
 		curView.events.bind("displayed", "fail", function() {
 			expect(true).toEqual(false);
 		})
@@ -85,7 +85,7 @@ describe("View", function() {
 	})
 	it("can go back to last view", function() {
 		var lastView = mvc.viewMgr.init("test");
-		lastView.data={"value":"test value"};
+		lastView.uidata={"value":"test value"};
 		lastView.show();
 		var nextView = mvc.viewMgr.init("test1");
 		nextView.show();
@@ -138,7 +138,7 @@ describe("View", function() {
 	})
 	it ("can set up params for a page",function(){
 		var test=mvc.viewMgr.get("test");
-		test.data={"value":"helloworld"};
+		test.uidata={"value":"helloworld"};
 		test.show();
 		expect("helloworld").toEqual(test.$("span").text());
 	})

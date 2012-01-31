@@ -7,7 +7,7 @@ mvc.ext(mvc.cls, "modelMgr", mvc.Class.create({
 		
 	},
 	/**
-	 * load data and call back func.
+	 * load data to local and call back func.
 	 */
 	load : function() {
 	},
@@ -19,5 +19,11 @@ mvc.ext(mvc.cls, "modelMgr", mvc.Class.create({
 	},
 	remove : function() {
 
+	},
+	/**
+	 * return local cached data;
+	 */
+	getData:function(){
+		
 	}
 }))

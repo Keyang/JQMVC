@@ -1,5 +1,6 @@
 /**
  * Log definition
+ * part_log.js
  */
 mvc.ext(mvc['cls'], '_log', function() {
 	var props = {
@@ -52,3 +53,5 @@ mvc.ext(mvc['cls'], '_log', function() {
 	}
 	return _public;
 });
+
+mvc.log=new mvc.cls._log();

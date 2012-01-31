@@ -60,4 +60,4 @@ mvc.ext(mvc.cls, "history", function() {
 	}
 	
 	return _public;
-})
+});

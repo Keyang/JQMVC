@@ -13,11 +13,13 @@ YUI_COMPRESSOR_PATH = "../lib/yui.jar";
 SCRIPT_PATTERN = re.compile(r"(<script)(.*?)(src=)([\"|'])(.*?)([\"|'])(.*?)(>(</script>)?)");
 CSS_PATTERN = re.compile(r"(<link)(.*?)(href=)([\"|'])(.*?)([\"|'])(.*?)(>)");
 IGNORE_PATTERN = re.compile(r"(<!--BEGIN-FH-IGNORE-->)(.*?)(<!--END-FH-IGNORE-->)", re.DOTALL);
-INDEX_DEV_FILE = "/index-dev.html";
+tar_pack="";
+
 JS_HTTP = [];
 EXPORTED_PATH="../bin";
-MERGED_FILE="jqmvc_debug";
-MINIFIED_FILE="jqmvc.min";
+INDEX_DEV_FILE = "";
+MERGED_FILE="";
+MINIFIED_FILE="";
 
 def readIndexFile():
   indexFilePath = PATH_PREFIX + INDEX_DEV_FILE;
@@ -118,18 +120,32 @@ def doMinify(originFile,type):
 def usage():
   print("build.py <PATH_TO_YUI_COMPRESSOR_JAR>");
   sys.exit(2);
-  
+
+def redefinevars():
+  global INDEX_DEV_FILE;
+  global MERGED_FILE;
+  global MINIFIED_FILE;
+  global tar_pack;
+  INDEX_DEV_FILE = "/index-{0}.html".format(tar_pack);
+  MERGED_FILE="jqmvc_{0}_debug".format(tar_pack);
+  MINIFIED_FILE="jqmvc_{0}.min".format(tar_pack);
+ 
+      
 def main():
   global YUI_COMPRESSOR_PATH;
   if not os.path.exists(YUI_COMPRESSOR_PATH):
     print("Can not find file " + YUI_COMPRESSOR_PATH);
     sys.exit(2);
   if len(sys.argv)!=2:
-      print("Usage: pythong build.py {core|plugin}");
+      print("Usage: pythong build.py {html}");
       sys.exit(3);
   
   global PATH_PREFIX;
-  PATH_PREFIX='../'+sys.argv[1];
+  global tar_pack;
+  
+  tar_pack=sys.argv[1];
+  PATH_PREFIX='../src';
+  redefinevars();
   print ("Start to build folder:"+PATH_PREFIX);
   readIndexFile();
   

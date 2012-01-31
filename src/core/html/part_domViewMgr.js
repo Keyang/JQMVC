@@ -141,7 +141,7 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 			return viewName;
 		},
 		reset : function(name) {
-			return _props._views[name] = new mvc.cls.view_dom(name);
+			return _props._views[name] = new mvc.html.view_dom(name);
 		},
 		get : function(name) {
 			if( typeof name == "undefined") {
@@ -150,7 +150,7 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 			if(_props._views[name] != undefined) {
 				return _props._views[name];
 			} else {
-				var obj = new mvc.cls.view_dom(name);
+				var obj = new mvc.html.view_dom(name);
 				_props._views[name] = obj;
 				return obj;
 			}
@@ -169,4 +169,7 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 	};
 	_private.init();
 	return _public;
-}))());
+})()));
+
+
+mvc.viewMgr=new mvc.html.domViewMgr();

@@ -4,8 +4,7 @@
  * ./html/part_viewcls.js
  */
 mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
-	model : null,
-	data : {},
+	uidata : {},
 	"wrapperTag" : "div",
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
@@ -69,16 +68,13 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		mvc.log.i(mvc.string.info.view.lpf + path);
 		var pageHtml = mvc.html.ajax.syncLoad(path);
 		// if(!_props.isUIdataLoaded) {
-		// _props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
+		// _props.uidata = mvc.html.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
-		if(this.model != null) {
-			//TODO model
-		}
-		var uidata = mvc.util.copyJSON(this.data);
+		var uidata = mvc.util.copyJSON(this.uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);
-		var parsedPageHtml = mvc.htlm.parser.parseHtml(pageHtml, params);
+		var parsedPageHtml = mvc.html.parser.parseHtml(pageHtml, params);
 		this.loadStatus = "parsing";
 		parsedPageHtml = this.fire("afterParse", parsedPageHtml, undefined, false);
 		if(this.op_buf != null && this.op_buf != "") {
@@ -117,7 +113,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		mvc.$("#" + this.name).remove();
 	},
 	/**
-	 * Return a jQuery Object within current view
+	 * Return a jQuery Object indicating a html element in current view
 	 * page container will be returned if no selector given.
 	 */
 	$ : function(selector) {
