@@ -1,7 +1,8 @@
 /**
- * part_parser.js
+ * Parser of <?mvc code ?>.
+ * ./html/part_parser.js
  */
-mvc.ext(mvc.cls, "parser", function() {
+mvc.ext(mvc.html, "parser", function() {
 	var _public = {
 		/**
 		 * Parse html code within specific scope(params).

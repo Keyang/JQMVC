@@ -8,7 +8,12 @@
 	var obj = parent[nameSpace];
 	obj.ext = function(parent, key, tarObj) {
 		if( typeof parent != "object") {
-			throw ("mvc.ext first param should be entry object.");
+			try{
+				parent={};
+			}catch(e){
+				mvc.log.w("mvc.ext first param should be entry object.");
+				mvc.log.e(e);
+			}
 		}
 		if( typeof key != "string") {
 			throw ("mvc.ext second param should be key as string.");
@@ -19,15 +24,16 @@
 		parent[key] = tarObj;
 	}
 	obj.opt = opt;
-})(window, _app_)
+})(window, _app_);
 mvc.ext(mvc, "cls", {});
+mvc.ext(mvc,"init",{});
 mvc.ext(mvc, "$", function(selector) {
 	if(selector != undefined) {
 		return $(mvc.opt.appContainer).find(selector);
 	} else {
 		return $(mvc.opt.appContainer);
 	}
-})
+});
 mvc.ext(mvc, "util", {
 	text : {
 		format : function() {

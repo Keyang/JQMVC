@@ -11,11 +11,17 @@ mvc.ext(mvc['cls'], '_log', function() {
 		}
 	}
 	var _public = {
+		/**
+		 * Debug message
+		 */
 		d : function(debugInfo) {
 			debugInfo=debugInfo ||"";
 			var template="DEBUG: {0}";
 			_private.log(mvc.util.text.format(template,debugInfo));
 		},
+		/**
+		 * Info Message
+		 */
 		i : function(info) {
 			info=info || "";
 			var template="INFO: {0}";
@@ -35,6 +41,13 @@ mvc.ext(mvc['cls'], '_log', function() {
 			}else{
 				throw(e);
 			}
+		},
+		/**
+		 * Warning message
+		 */
+		w:function(str){
+			var template="WARNNING: {0}";
+			_private.log(mvc.util.text.format(template,str));
 		}
 	}
 	return _public;

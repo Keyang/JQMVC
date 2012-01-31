@@ -1,9 +1,9 @@
 /**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
- * part_viewcls.js
+ * ./html/part_viewcls.js
  */
-mvc.ext(mvc.cls, "view_dom", mvc.Class.create(mvc.cls.absview, {
+mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	model : null,
 	data : {},
 	"wrapperTag" : "div",
@@ -67,7 +67,7 @@ mvc.ext(mvc.cls, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		// var layoutPath = mvc.opt.layoutPath + "/" + _props.layout + ".html";
 		this.fire("beforeLoad");
 		mvc.log.i(mvc.string.info.view.lpf + path);
-		var pageHtml = mvc.ajax.syncLoad(path);
+		var pageHtml = mvc.html.ajax.syncLoad(path);
 		// if(!_props.isUIdataLoaded) {
 		// _props.uidata = mvc.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
@@ -78,7 +78,7 @@ mvc.ext(mvc.cls, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);
-		var parsedPageHtml = mvc.parser.parseHtml(pageHtml, params);
+		var parsedPageHtml = mvc.htlm.parser.parseHtml(pageHtml, params);
 		this.loadStatus = "parsing";
 		parsedPageHtml = this.fire("afterParse", parsedPageHtml, undefined, false);
 		if(this.op_buf != null && this.op_buf != "") {

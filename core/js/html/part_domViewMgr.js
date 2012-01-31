@@ -1,8 +1,8 @@
 /**
  * View Manager Definition
- * part_view.js
+ * ./html/part_view.js
  */
-mvc.ext(mvc.cls, "domViewMgr", function() {
+mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
 	var _public = {
 		/**
 		 * Get or created a view with specific name & Push created view to view manager.
@@ -169,4 +169,4 @@ mvc.ext(mvc.cls, "domViewMgr", function() {
 	};
 	_private.init();
 	return _public;
-});
+}))());

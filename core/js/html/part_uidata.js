@@ -24,7 +24,7 @@ mvc.ext(mvc.cls, "uidata", function() {
 			if(_props.cachedJSON[datapath] != undefined) {
 				tmpObj = _props.cachedJSON[datapath];
 			} else {
-				var res = mvc.ajax.syncLoad(datapath, {
+				var res = mvc.html.ajax.syncLoad(datapath, {
 					dataType : "json"
 				});
 				if(res != undefined && res != "") {
