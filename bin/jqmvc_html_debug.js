@@ -1039,7 +1039,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
  * Parser of <?mvc code ?>.
  * ./html/part_parser.js
  */
-mvc.ext(mvc.html, "parser_cls", function() {
+mvc.ext(mvc.html, "parser", new (function() {
 	var _public = {
 		/**
 		 * Parse html code within specific scope(params).
@@ -1048,7 +1048,8 @@ mvc.ext(mvc.html, "parser_cls", function() {
 		 */
 		parseHtml : function(html, param) {
 			return _private.parseHtml(html, param);
-		}
+		},
+		
 	};
 	var _props = {
 		startTag : "<?mvc",
@@ -1078,7 +1079,7 @@ mvc.ext(mvc.html, "parser_cls", function() {
 				var __endPos = __html.indexOf(et, __startPos);
 				var __statement = __html.substring(__startPos, __endPos);
 				var __val = "";
-				__val = mvc.parseExec(__statement, param);
+				__val = mvc.html.parseExec(__statement, param);
 				if(__val == undefined) {
 					__val = "";
 				}
@@ -1089,9 +1090,9 @@ mvc.ext(mvc.html, "parser_cls", function() {
 		}
 	};
 	return _public;
-});
+})());
 
-mvc.ext(mvc, "parseExec", function(__code__, __scope__) {
+mvc.ext(mvc.html, "parseExec", function(__code__, __scope__) {
 	with(__scope__) {
 		try {
 			return eval(__code__);
@@ -1100,7 +1101,7 @@ mvc.ext(mvc, "parseExec", function(__code__, __scope__) {
 		}
 	}
 });
-mvc.ext(mvc, "parseJSON", function(__code__) {
+mvc.ext(mvc.html, "parseJSON", function(__code__) {
 		try {
 			return eval("("+__code__+")");
 		} catch(e) {
@@ -1108,4 +1109,12 @@ mvc.ext(mvc, "parseJSON", function(__code__) {
 		}
 });
 
-mvc.ext(mvc.html,"parser",new mvc.html.parser_cls());
+/**
+ * Element is a re-usable UI component in views.
+ * It is an extension of domview 
+ * ./html/part_html_element.js
+ * 
+ */
+mvc.ext(mvc.html,"element",ext.Class.create({
+	
+}))
