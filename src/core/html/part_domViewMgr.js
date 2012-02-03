@@ -37,16 +37,18 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 		 * preload views
 		 * @param view array.
 		 * @param async. default true
+		 * @param cb, callback function when async is true
 		 */
-		preLoad : function(viewArr, async) {
-			return _private.preLoad(viewArr,async);
+		preLoad : function(viewArr, async,cb) {
+			return _private.preLoad(viewArr,async,cb);
 		},
 		/**
 		 * preload all views
 		 * @param async. default true
+		 * @param cb. callback function when async is true
 		 */
-		preLoadAll : function(async) {
-			return _private.preLoadAll(async);
+		preLoadAll : function(async,cb) {
+			return _private.preLoadAll(async,cb);
 		},
 		/**
 		 * setup the cls of page
@@ -78,7 +80,8 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 		pageCls : "page"
 	};
 	var _private = {
-		preLoad : function(viewArr, async) {
+		preLoad : function(viewArr, async,cb) {
+			var count=viewArr.length;
 			for (var i=0;i<viewArr.length;i++){
 				var view=viewArr[i];
 				if (async===false){
@@ -88,18 +91,34 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 						var v=view;
 						setTimeout(function(){
 							v.loadDom();
+							count--;
+							if (count===0){
+								if (cb && typeof cb ==="function"){
+									cb();
+								}
+							}
 						},1)
 					})();
 				}
 			}
 		},
-		preLoadAll : function(async) {
+		preLoadAll : function(async,cb) {
+			var count=0;
+			for (var key in _props._views){
+				count++;
+			}
 			_private.each(function(v) {
 				if(async === false) {
 					v.loadDom();
 				} else {
 					setTimeout(function() {
 						v.loadDom();
+						count--;
+						if (count===0){
+							if (cb && typeof cb==="function"){
+								cb();
+							}
+						}
 					}, 1);
 				}
 			})

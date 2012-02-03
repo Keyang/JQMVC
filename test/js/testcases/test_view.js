@@ -114,7 +114,9 @@ describe("View", function() {
 		expect($("#b").length).toEqual(1);
 		expect($("#c").length).toEqual(1);
 		init();
-		mvc.viewMgr.preLoadAll(true);
+		mvc.viewMgr.preLoadAll(true,function(){
+			console.log("all loaded");
+		});
 		//asyncorous load
 	})
 	it("can preLoad a set of view to dom asynchorous/synchorous", function() {
@@ -133,7 +135,9 @@ describe("View", function() {
 		expect($("#b").length).toEqual(1);
 		expect($("#c").length).toEqual(0);
 		init();
-		mvc.viewMgr.preLoad([a,b],true);
+		mvc.viewMgr.preLoad([a,b],true,function(){
+			console.log("preloaded");
+		});
 		//asyncorous load
 	})
 	it ("can set up params for a page",function(){
@@ -153,4 +157,15 @@ describe("View", function() {
 			}
 		})
 	})
-})
+});
+
+describe("element",function(){
+	it ("can load element and parse in params",function(){
+		var view=mvc.viewMgr.init("pagewithelement");
+		view.show();
+		expect(5).toEqual($(".myelement").length);
+		
+	})
+});
+
+

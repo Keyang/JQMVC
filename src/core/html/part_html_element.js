@@ -20,11 +20,11 @@ mvc.ext(mvc.html,"element",function(){
 		mvc.log.e(e);
 	}
 	//stub method
-	function _element(eleName,params){
+	function _element(name,params){
 		if (params==undefined) {
           params= {};
         }
-        var path=mvc.opt.elementPath+name+".html";
+        var path=mvc.opt.elementPath+"/"+name+".html";
         var res= mvc.html.ajax.syncLoad(path);
         res=mvc.html.parser.parseHtml(res,params);
         return res;
@@ -32,5 +32,7 @@ mvc.ext(mvc.html,"element",function(){
 	
 	//TODO add confg check
 	mvc.html.parser.removeScopeItem("element");
-	addScopeItem("element",_element);
-})
+	mvc.html.parser.addScopeItem("element",_element);
+});
+
+mvc.html.element();
