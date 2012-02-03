@@ -1,3 +1,4 @@
+mvc.viewMgr=mvc.html.domViewMgr;
 describe("View", function() {
 	var view = null;
 	var i = 0;
@@ -24,10 +25,10 @@ describe("View", function() {
 		//Bound function will be executed each view triggers "display" event
 		mvc.viewMgr.events.bind("domReady", "addHtml", function() {
 			console.log("name:" + this.getName() + " id:" + this.$().attr("id"));
-			this.$().append("<p>added content</p>");
+			this.$().append("<p>globally added content</p>");
 		})
 		mvc.viewMgr.events.bind("domReady", "checkHtml", function(dom) {
-			expect(dom.html().indexOf("<p>added content</p>") > -1).toEqual(true);
+			expect(dom.html().indexOf("<p>globally added content</p>") > -1).toEqual(true);
 		})
 	})
 	it("can change page url", function() {

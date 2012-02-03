@@ -72,12 +72,6 @@ mvc.ext(mvc, "util", {
 });
 
 /**
- * Generate entries
- */
-
-mvc.ext(mvc,"log", {});
-mvc.ext(mvc,"viewMgr", {});
-/**
  * part_class.js
  */
 mvc.ext(mvc, "Class", (function() {
@@ -176,7 +170,7 @@ mvc.ext(mvc, "Class", (function() {
 	};
 })());
 /**
- * Log definition
+ * console Log definition
  * part_log.js
  */
 mvc.ext(mvc['cls'], '_log', function() {
@@ -479,7 +473,7 @@ mvc.ext(mvc,"string",{
  * part_viewcls.js
  */
 mvc.ext(mvc.cls, "absview", mvc.Class.create({
-	
+		"viewMgr":null,
 		"name" : "undefined",
 		"op_buf" : "",
 		"events" : null,
@@ -500,14 +494,17 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 			throw("Show method should be overwritten.");
 		},
 		/**
-		 * fire an event.
+		 * fire an event of both global and private.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
 		 * @param async whether fire the events asynchrously. default is false
 		 */
 		fire : function(eventType, param, key, async) {
-			var res = mvc.viewMgr.events.fire(eventType, param, key, async, this);
+			var res;
+			if (this.viewMgr!=null){
+			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
+			}
 			return this.events.fire(eventType, res, key, async);
 		},
 		getName : function() {
@@ -532,7 +529,9 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
  * 
  */
 mvc.ext(mvc.cls,"absViewMgr",mvc.Class.create({
-	
+	initialise:function(){
+		this.events=new mvc.cls['event']();
+	}
 }))
 /**
  * part_history.js
@@ -708,7 +707,7 @@ mvc.ext(mvc.html, "ajax", new (function() {
  * View Manager Definition
  * ./html/part_view.js
  */
-mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
+mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
 	var _public = {
 		/**
 		 * Get or created a view with specific name & Push created view to view manager.
@@ -774,8 +773,18 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 		 */
 		clearAll : function() {
 			return _private.clearAll();
+		},
+		initialise : function($super) {
+			$super();
+			this.props=_props;
+			this.events.bind("displayed", "_history_event", function() {
+				var curView = _private.get();
+				if(curView != null) {
+					_props.history.push(curView.getName());
+				}
+				_props.curView = this;
+			});
 		}
-		//Event interfaces
 	}
 
 	var _props = {
@@ -848,16 +857,6 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 		clearHistory : function() {
 			_props.history.clear();
 		},
-		init : function() {
-			_public['events'] = _props.events;
-			_public.events.bind("displayed", "_history_event", function() {
-				var curView = _private.get();
-				if(curView != null) {
-					_props.history.push(curView.getName());
-				}
-				_props.curView = this;
-			})
-		},
 		back : function() {
 			var viewName = _props.history.back();
 			if(viewName != undefined) {
@@ -892,12 +891,10 @@ mvc.ext(mvc.html, "domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function
 			}
 		}
 	};
-	_private.init();
 	return _public;
 })()));
 
-
-mvc.viewMgr=new mvc.html.domViewMgr();
+mvc.html.domViewMgr=new mvc.html._domViewMgr();
 /**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
@@ -909,6 +906,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
+		this.viewMgr=mvc.html.domViewMgr;
 		$super(name);
 	},
 	/**
@@ -980,7 +978,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		if(this.op_buf != null && this.op_buf != "") {
 			parsedPageHtml = this.op_buf + parsedPageHtml;
 		}
-		var finalHtml = mvc.util.text.format("<{1} id='{0}' class='{3}'>{4}</{2}>", pageID, this.wrapperTag, this.wrapperTag, mvc.viewMgr.getPageCls(), parsedPageHtml);
+		var finalHtml = mvc.util.text.format("<{1} id='{0}' class='{3}'>{4}</{2}>", pageID, this.wrapperTag, this.wrapperTag, this.viewMgr.getPageCls(), parsedPageHtml);
 
 		this.op_buf = finalHtml;
 		this.loadStatus = "loaded";

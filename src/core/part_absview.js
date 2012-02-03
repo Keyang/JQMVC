@@ -3,7 +3,7 @@
  * part_viewcls.js
  */
 mvc.ext(mvc.cls, "absview", mvc.Class.create({
-	
+		"viewMgr":null,
 		"name" : "undefined",
 		"op_buf" : "",
 		"events" : null,
@@ -24,14 +24,17 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 			throw("Show method should be overwritten.");
 		},
 		/**
-		 * fire an event.
+		 * fire an event of both global and private.
 		 * @param eventType event that will be fired.
 		 * @param param parameters will be passed in.
 		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
 		 * @param async whether fire the events asynchrously. default is false
 		 */
 		fire : function(eventType, param, key, async) {
-			var res = mvc.viewMgr.events.fire(eventType, param, key, async, this);
+			var res;
+			if (this.viewMgr!=null){
+			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
+			}
 			return this.events.fire(eventType, res, key, async);
 		},
 		getName : function() {
@@ -48,5 +51,14 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 					this[key]=null;
 				}
 			}
+		},
+		/**
+		 * display current view
+		 * It will fire "displayed" event
+		 * Return displayed content
+		 */
+		display:function(){
+			this.fire("displayed", {}, undefined, false);
+			return this.op_buf;
 		}
 }));

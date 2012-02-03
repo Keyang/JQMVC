@@ -1,5 +1,5 @@
 /**
- * Log definition
+ * console Log definition
  * part_log.js
  */
 mvc.ext(mvc['cls'], '_log', function() {
