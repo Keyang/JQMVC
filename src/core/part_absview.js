@@ -10,8 +10,9 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		/**
 		 * class constructor
 		 */
-		initialise : function(name) {
+		initialise : function(name,viewMgr) {
 			this.name = name;
+			this.viewMgr=viewMgr;
 			this.events=new mvc.cls.event(this);
 		},
 		/**
@@ -32,7 +33,7 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		 */
 		fire : function(eventType, param, key, async) {
 			var res;
-			if (this.viewMgr!=null){
+			if (this.viewMgr && this.viewMgr!=null){
 			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
 			}
 			return this.events.fire(eventType, res, key, async);
@@ -58,7 +59,7 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		 * Return displayed content
 		 */
 		display:function(){
-			this.fire("displayed", {}, undefined, false);
+			this.fire("displayed", [this,this.viewMgr], undefined, false);
 			return this.op_buf;
 		}
 }));

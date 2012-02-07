@@ -469,71 +469,6 @@ mvc.ext(mvc,"string",{
 	}
 });
 /**
- *  abstract view class
- * part_viewcls.js
- */
-mvc.ext(mvc.cls, "absview", mvc.Class.create({
-		"viewMgr":null,
-		"name" : "undefined",
-		"op_buf" : "",
-		"events" : null,
-		/**
-		 * class constructor
-		 */
-		initialise : function(name) {
-			this.name = name;
-			this.events=new mvc.cls.event(this);
-		},
-		/**
-		 * Echo data to output buffer
-		 */
-		echo : function(str) {
-			this.op_buf+=str;
-		},
-		show : function() {
-			throw("Show method should be overwritten.");
-		},
-		/**
-		 * fire an event of both global and private.
-		 * @param eventType event that will be fired.
-		 * @param param parameters will be passed in.
-		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
-		 * @param async whether fire the events asynchrously. default is false
-		 */
-		fire : function(eventType, param, key, async) {
-			var res;
-			if (this.viewMgr!=null){
-			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
-			}
-			return this.events.fire(eventType, res, key, async);
-		},
-		getName : function() {
-			return this.name;
-		},
-		/**
-		 * remove this view
-		 */
-		remove : function() {
-			for(var key in this) {
-				if (typeof this[key] == "function" ){
-					this[key] = function() {};
-				}else{
-					this[key]=null;
-				}
-			}
-		}
-}));
-/**
- * Abstract view manager class
- * part_absViewMgr.js
- * 
- */
-mvc.ext(mvc.cls,"absViewMgr",mvc.Class.create({
-	initialise:function(){
-		this.events=new mvc.cls['event']();
-	}
-}))
-/**
  * part_history.js
  */
 mvc.ext(mvc.cls, "history", function() {
@@ -596,6 +531,158 @@ mvc.ext(mvc.cls, "history", function() {
 	
 	return _public;
 });
+/**
+ *  abstract view class
+ * part_viewcls.js
+ */
+mvc.ext(mvc.cls, "absview", mvc.Class.create({
+		"viewMgr":null,
+		"name" : "undefined",
+		"op_buf" : "",
+		"events" : null,
+		/**
+		 * class constructor
+		 */
+		initialise : function(name,viewMgr) {
+			this.name = name;
+			this.viewMgr=viewMgr;
+			this.events=new mvc.cls.event(this);
+		},
+		/**
+		 * Echo data to output buffer
+		 */
+		echo : function(str) {
+			this.op_buf+=str;
+		},
+		show : function() {
+			throw("Show method should be overwritten.");
+		},
+		/**
+		 * fire an event of both global and private.
+		 * @param eventType event that will be fired.
+		 * @param param parameters will be passed in.
+		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
+		 * @param async whether fire the events asynchrously. default is false
+		 */
+		fire : function(eventType, param, key, async) {
+			var res;
+			if (this.viewMgr && this.viewMgr!=null){
+			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
+			}
+			return this.events.fire(eventType, res, key, async);
+		},
+		getName : function() {
+			return this.name;
+		},
+		/**
+		 * remove this view
+		 */
+		remove : function() {
+			for(var key in this) {
+				if (typeof this[key] == "function" ){
+					this[key] = function() {};
+				}else{
+					this[key]=null;
+				}
+			}
+		},
+		/**
+		 * display current view
+		 * It will fire "displayed" event
+		 * Return displayed content
+		 */
+		display:function(){
+			this.fire("displayed", [this,this.viewMgr], undefined, false);
+			return this.op_buf;
+		}
+}));
+/**
+ * Abstract view manager class
+ * part_absViewMgr.js
+ *
+ */
+mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
+	props : {
+		viewCls : null,
+		curView : null,
+		_views : {}
+	},
+	historyStack : new mvc.cls.history(),
+	initialise : function(newprops) {
+		this.events = new mvc.cls['event']();
+		if(newprops && typeof newprops === "object") {
+			for(var key in newprops) {
+				this.props[key] = newprops[key];
+			}
+		}
+		this.events.bind("displayed", "_history_event", function(v,vmgr) {
+			var curView=vmgr.get();
+			if (curView!=null){
+				vmgr.historyStack.push(curView.getName());
+			}
+			vmgr.props.curView = v;
+		});
+	},
+	/**
+	 * Get or created a view with specific name & Push created view to view manager.
+	 * If no name is given, current view (displayed) will be returned. If current view is not set, null will return.
+	 * If a new name is given, a new view will be created.
+	 */
+	get : function(name) {
+		if( typeof name == "undefined") {
+			return this.props.curView;
+		}
+		if(this.props._views[name] != undefined) {
+			return this.props._views[name];
+		} else {
+			var obj = new this.props.viewCls(name);
+			this.props._views[name] = obj;
+			return obj;
+		}
+	},
+	/**
+	 * view callback iterator
+	 */
+	each : function(func) {
+		for(var key in this.props._views) {
+			func(this.props._views[key]);
+		}
+	},
+	/**
+	 * Return whether a specified view existed.
+	 */
+	isViewExisted : function(name) {
+		if( typeof name == "undefined") {
+			mvc.log.e(mvc.string.error.view["vnun"], "mvc.view.isViewExisted with parameter:", name);
+			return false;
+		}
+		if(this.props._views[name] != undefined) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+	/**
+	 * Forcely init a new view. it will replace existing one.
+	 */
+	init : function(name) {
+		return this.props._views[name] = new this.props.viewCls(name);
+	},
+	/**
+	 * clear history stack
+	 */
+	clearHistory : function() {
+		return this.historyStack.clear();
+	},
+	clearAll : function() {
+		this.each(function(v) {
+			v.remove();
+		})
+		this.clearHistory();
+		this.props._views = {};
+		this.props.curView = null;
+	}
+}));
 /**
  * ./html/part_html_init.js
  */
@@ -704,198 +791,6 @@ mvc.ext(mvc.html, "ajax", new (function() {
 	return _public;
 })());
 /**
- * View Manager Definition
- * ./html/part_view.js
- */
-mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
-	var _public = {
-		/**
-		 * Get or created a view with specific name & Push created view to view manager.
-		 * If no name is given, current view (displayed) will be returned. If current view is not set, null will return.
-		 * If a new name is given, a new view will be created.
-		 */
-		get : function(name) {
-			return _private.get(name);
-		},
-		/**
-		 * Return whether a specified view existed.
-		 */
-		isViewExisted : function(name) {
-			return _private.isViewExisted(name);
-		},
-		/**
-		 * Init a new view. it will replace existing one.
-		 */
-		init : function(name) {
-			return _private.reset(name);
-		},
-		/**
-		 * display last view in history stack.
-		 */
-		back : function() {
-			return _private.back();
-		},
-		clearHistory : function() {
-			return _private.clearHistory();
-		},
-		/**
-		 * preload views
-		 * @param view array.
-		 * @param async. default true
-		 * @param cb, callback function when async is true
-		 */
-		preLoad : function(viewArr, async,cb) {
-			return _private.preLoad(viewArr,async,cb);
-		},
-		/**
-		 * preload all views
-		 * @param async. default true
-		 * @param cb. callback function when async is true
-		 */
-		preLoadAll : function(async,cb) {
-			return _private.preLoadAll(async,cb);
-		},
-		/**
-		 * setup the cls of page
-		 * @param str class name
-		 */
-		setPageCls : function(str) {
-			return _private.setPageCls(str);
-		},
-		/**
-		 * get the cls of page
-		 */
-		getPageCls : function() {
-			return _private.getPageCls();
-		},
-		/**
-		 * clear all views, history, dom
-		 */
-		clearAll : function() {
-			return _private.clearAll();
-		},
-		initialise : function($super) {
-			$super();
-			this.props=_props;
-			this.events.bind("displayed", "_history_event", function() {
-				var curView = _private.get();
-				if(curView != null) {
-					_props.history.push(curView.getName());
-				}
-				_props.curView = this;
-			});
-		}
-	}
-
-	var _props = {
-		curView : null,
-		_views : {},
-		history : new mvc.cls.history(),
-		events : new mvc.cls.event(),
-		pageCls : "page"
-	};
-	var _private = {
-		preLoad : function(viewArr, async,cb) {
-			var count=viewArr.length;
-			for (var i=0;i<viewArr.length;i++){
-				var view=viewArr[i];
-				if (async===false){
-					view.loadDom();
-				}else{
-					(function(){
-						var v=view;
-						setTimeout(function(){
-							v.loadDom();
-							count--;
-							if (count===0){
-								if (cb && typeof cb ==="function"){
-									cb();
-								}
-							}
-						},1)
-					})();
-				}
-			}
-		},
-		preLoadAll : function(async,cb) {
-			var count=0;
-			for (var key in _props._views){
-				count++;
-			}
-			_private.each(function(v) {
-				if(async === false) {
-					v.loadDom();
-				} else {
-					setTimeout(function() {
-						v.loadDom();
-						count--;
-						if (count===0){
-							if (cb && typeof cb==="function"){
-								cb();
-							}
-						}
-					}, 1);
-				}
-			})
-		},
-		each : function(func) {
-			for(var key in _props._views) {
-				func(_props._views[key]);
-			}
-		},
-		clearAll : function() {
-			_private.each(function(v) {
-				v.remove();
-			})
-			_private.clearHistory();
-			_props._views = {};
-			_props.curView = null;
-		},
-		getPageCls : function() {
-			return _props.pageCls;
-		},
-		clearHistory : function() {
-			_props.history.clear();
-		},
-		back : function() {
-			var viewName = _props.history.back();
-			if(viewName != undefined) {
-				_private.get(viewName).display(false);
-			}
-			return viewName;
-		},
-		reset : function(name) {
-			return _props._views[name] = new mvc.html.view_dom(name);
-		},
-		get : function(name) {
-			if( typeof name == "undefined") {
-				return _props.curView;
-			}
-			if(_props._views[name] != undefined) {
-				return _props._views[name];
-			} else {
-				var obj = new mvc.html.view_dom(name);
-				_props._views[name] = obj;
-				return obj;
-			}
-		},
-		isViewExisted : function(name) {
-			if( typeof name == "undefined") {
-				mvc.log.e(mvc.string.error.view["vnun"], "mvc.view.isViewExisted with parameter:", name);
-				return false;
-			}
-			if(_props._views[name] != undefined) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-	};
-	return _public;
-})()));
-
-mvc.html.domViewMgr=new mvc.html._domViewMgr();
-/**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
  * ./html/part_viewcls.js
@@ -906,8 +801,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
-		this.viewMgr=mvc.html.domViewMgr;
-		$super(name);
+		$super(name,mvc.html.domViewMgr);
 	},
 	/**
 	 * Synchorously load / render / display current view.
@@ -921,19 +815,19 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	 * Display this view.
 	 * @param forward Is page go forward or backward.
 	 */
-	display : function(forward) {
+	display : function($super,forward) {
 		var obj = this.$();
 		if(obj.length == 0) {
 			this.loadDom(true);
 		}
 		try {
-			if(forward === false) {
+			if(forward === true) {
 				func = mvc.opt.interfaces.goBackPage;
 			} else {
 				func = mvc.opt.interfaces.goForwPage;
 			}
 			func(this.getName());
-			this.fire("displayed", {}, undefined, false);
+			return $super();
 		} catch(e) {
 			mvc.log.e(e, "Display View", this.getName());
 		}
@@ -1052,6 +946,115 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 	}
 }));
+/**
+ * View Manager Definition
+ * ./html/part_domViewMgr.js
+ */
+mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
+	var _public = {
+		/**
+		 * display last view in history stack.
+		 */
+		back : function() {
+			var viewName = this.historyStack.back();
+			if(viewName != undefined) {
+				this.get(viewName).display(false);
+			}
+			return viewName;
+		},
+		/**
+		 * preload views
+		 * @param view array.
+		 * @param async. default true
+		 * @param cb, callback function when async is true
+		 */
+		preLoad : function(viewArr, async,cb) {
+			return _private.preLoad(viewArr,async,cb);
+		},
+		/**
+		 * preload all views
+		 * @param async. default true
+		 * @param cb. callback function when async is true
+		 */
+		preLoadAll : function(async,cb) {
+			var count=0;
+			for (var key in _props._views){
+				count++;
+			}
+			this.each(function(v) {
+				if(async === false) {
+					v.loadDom();
+				} else {
+					setTimeout(function() {
+						v.loadDom();
+						count--;
+						if (count===0){
+							if (cb && typeof cb==="function"){
+								cb();
+							}
+						}
+					}, 1);
+				}
+			});
+		},
+		/**
+		 * setup the cls of page
+		 * @param str class name
+		 */
+		setPageCls : function(str) {
+			return _private.setPageCls(str);
+		},
+		/**
+		 * get the cls of page
+		 */
+		getPageCls : function() {
+			return _private.getPageCls();
+		},
+		initialise : function($super) {
+			this.props.viewCls=mvc.html.view_dom;
+			$super(_props);
+		}
+	}
+
+	var _props = {
+		pageCls : "page"
+	};
+	var _private = {
+		preLoad : function(viewArr, async,cb) {
+			var count=viewArr.length;
+			for (var i=0;i<viewArr.length;i++){
+				var view=viewArr[i];
+				if (async===false){
+					view.loadDom();
+				}else{
+					(function(){
+						var v=view;
+						setTimeout(function(){
+							v.loadDom();
+							count--;
+							if (count===0){
+								if (cb && typeof cb ==="function"){
+									cb();
+								}
+							}
+						},1)
+					})();
+				}
+			}
+		},
+		getPageCls : function() {
+			return _props.pageCls;
+		},
+		setPageCls:function(str){
+			_props.pageCl=str;
+			return str;
+		}
+		
+	};
+	return _public;
+})()));
+
+mvc.html.domViewMgr=new mvc.html._domViewMgr();
 /**
  * Parser of <?mvc code ?>.
  * ./html/part_parser.js

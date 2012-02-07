@@ -1,6 +1,6 @@
 /**
  * View Manager Definition
- * ./html/part_view.js
+ * ./html/part_domViewMgr.js
  */
 mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (function() {
 	var _public = {
@@ -8,7 +8,7 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 		 * display last view in history stack.
 		 */
 		back : function() {
-			var viewName = this.history.back();
+			var viewName = this.historyStack.back();
 			if(viewName != undefined) {
 				this.get(viewName).display(false);
 			}
@@ -29,7 +29,25 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 		 * @param cb. callback function when async is true
 		 */
 		preLoadAll : function(async,cb) {
-			return _private.preLoadAll(async,cb);
+			var count=0;
+			for (var key in _props._views){
+				count++;
+			}
+			this.each(function(v) {
+				if(async === false) {
+					v.loadDom();
+				} else {
+					setTimeout(function() {
+						v.loadDom();
+						count--;
+						if (count===0){
+							if (cb && typeof cb==="function"){
+								cb();
+							}
+						}
+					}, 1);
+				}
+			});
 		},
 		/**
 		 * setup the cls of page
@@ -43,12 +61,6 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 		 */
 		getPageCls : function() {
 			return _private.getPageCls();
-		},
-		/**
-		 * clear all views, history, dom
-		 */
-		clearAll : function() {
-			return _private.clearAll();
 		},
 		initialise : function($super) {
 			this.props.viewCls=mvc.html.view_dom;
@@ -82,29 +94,12 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 				}
 			}
 		},
-		preLoadAll : function(async,cb) {
-			var count=0;
-			for (var key in _props._views){
-				count++;
-			}
-			_private.each(function(v) {
-				if(async === false) {
-					v.loadDom();
-				} else {
-					setTimeout(function() {
-						v.loadDom();
-						count--;
-						if (count===0){
-							if (cb && typeof cb==="function"){
-								cb();
-							}
-						}
-					}, 1);
-				}
-			})
-		},
 		getPageCls : function() {
 			return _props.pageCls;
+		},
+		setPageCls:function(str){
+			_props.pageCl=str;
+			return str;
 		}
 		
 	};

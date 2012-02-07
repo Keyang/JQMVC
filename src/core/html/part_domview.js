@@ -9,8 +9,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
-		this.viewMgr=mvc.html.domViewMgr;
-		$super(name);
+		$super(name,mvc.html.domViewMgr);
 	},
 	/**
 	 * Synchorously load / render / display current view.

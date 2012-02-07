@@ -17,12 +17,12 @@ mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
 				this.props[key] = newprops[key];
 			}
 		}
-		this.events.bind("displayed", "_history_event", function() {
-			var curView = _private.get();
-			if(curView != null) {
-				_props.history.push(curView.getName());
+		this.events.bind("displayed", "_history_event", function(v,vmgr) {
+			var curView=vmgr.get();
+			if (curView!=null){
+				vmgr.historyStack.push(curView.getName());
 			}
-			_props.curView = this;
+			vmgr.props.curView = v;
 		});
 	},
 	/**
@@ -37,7 +37,7 @@ mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
 		if(this.props._views[name] != undefined) {
 			return this.props._views[name];
 		} else {
-			var obj = new this.viewCls(name);
+			var obj = new this.props.viewCls(name);
 			this.props._views[name] = obj;
 			return obj;
 		}
@@ -74,7 +74,7 @@ mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
 	 * clear history stack
 	 */
 	clearHistory : function() {
-		return this.history.clear();
+		return this.historyStack.clear();
 	},
 	clearAll : function() {
 		this.each(function(v) {
