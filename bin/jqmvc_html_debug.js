@@ -170,6 +170,47 @@ mvc.ext(mvc, "Class", (function() {
 	};
 })());
 /**
+ * Abstract config class
+ * ./part_cfg.js
+ */
+
+mvc.ext(mvc.cls,"cfg",mvc.Class.create({
+	props:{
+		name:"undefined",
+		checkItems:{}
+	},
+	initialise:function(name){
+		this.props.name=name;
+		
+	},
+	check:function(opt){
+		for (var key in this.props.checkItems){
+			var func=this.props.checkItems[key];
+			var res=func(opt);
+			if (res===false){
+				throw("error happend");
+				return false;
+			}
+		}
+		return "Configuration check passed.";
+	},
+	addItem:function(name,func){
+		if (typeof name==="string" && typeof func ==="function"){
+			this.props.checkItems[name]=func;
+		}
+	},
+	removeItem:function(name){
+		if (this.props.checkItems[name]){
+			delete this.props.checkItems[name]
+		};
+	},
+	err:function(com,extra){
+		throw (com +" object is required in app configuration."+extra?extra : "");
+	}
+}));
+
+mvc.cfg=new mvc.cls.cfg("cfg");
+/**
  * console Log definition
  * part_log.js
  */
@@ -694,25 +735,52 @@ mvc.ext(mvc, "$", function(selector) {
 	} else {
 		return $(mvc.opt.appContainer);
 	}
-});/**
+});
+
+mvc.cfg.addItem("html_init",function(opt){
+	if (opt.appContainer==undefined){
+		mvc.cfg.err("appContainer");
+		return false;
+	}	
+});
+
+
+$(document).ready(function(){
+	mvc.cfg.check(mvc.opt);
+});
+
+/**
  * ./html/part_ajax.js
  */
 
 mvc.ext(mvc.html, "ajax", new (function() {
 	var _props = {
-		cachedHtml : {}
+		cachedHtml : {},
+		cfg_ajax:null
 	};
 	var _private = {
+		init:function(){
+			mvc.cfg.addItem("html.ajax",function(opt){
+				if (opt.ajax===undefined){
+					mvc.cfg.err("ajax");
+					return false;
+				}
+				_props.cfg_ajax=opt.ajax;
+			})
+		},
 		ajax : function(defparam, userParam) {
 			var param = defparam;
-			if(userParam !== undefined) {
+			if( _props.cfg_ajax!=null) {// global configuration
+				for (var key in _props.cfg_ajax){
+					param[key]=_props.cfg_ajax[key];
+				}
+			}
+			if(userParam !== undefined) { // user configuration
 				for(var key in userParam) {
 					param[key] = userParam[key];
 				}
 			}
-			if( typeof mvc.opt.xhr != "undefined") {//fix some issues of jQuery
-				param.xhr = mvc.opt.xhr;
-			}
+			
 			return $.ajax(param);
 		},
 		asyncLoad : function(path, callback, userParam) {
@@ -944,8 +1012,30 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		} else {
 			bindEvent();
 		}
+	},
+	setupUIData:function(obj){
+		this.uidata=obj;
 	}
 }));
+
+mvc.cfg.addItem("html.domview",function(opt){
+	if (opt.interfaces==undefined){
+		mvc.cfg.err("interfaces");
+		return false;
+	}
+	if (opt.interfaces.goBackPage==undefined){
+		mvc.cfg.err("interfaces.goBackPage");
+		return false;
+	}
+	if (opt.interfaces.goForwPage==undefined){
+		mvc.cfg.err("interfaces.goForwPage");
+		return false;
+	}
+	if (opt.pagePath==undefined){
+		mvc.cfg.err("pagePath");
+		return false;
+	}
+});
 /**
  * View Manager Definition
  * ./html/part_domViewMgr.js
@@ -1173,6 +1263,77 @@ mvc.ext(mvc.html,"element",function(){
 	//TODO add confg check
 	mvc.html.parser.removeScopeItem("element");
 	mvc.html.parser.addScopeItem("element",_element);
+	
 });
 
 mvc.html.element();
+
+mvc.cfg.addItem("html_element",function(opt){
+	if (opt.elementPath==undefined){
+		mvc.cfg.err("elementPath");
+		return false;
+	}
+});
+
+
+/**
+ * Add permenant link supporting.
+ * access of a static link is considered as a user action in this framework.
+ * ./html/part_permenant_link.js
+ */
+
+$(document).ready(function() {
+	var hrefStr = window.location.href;
+	var conStr = null;
+	var actStr = null;
+	var params = [];
+	var s1 = hrefStr.indexOf('_ctl=');
+	if(s1 > 0) {
+		var subStr = hrefStr.substr(s1 + 5);
+		var e1 = subStr.indexOf("&");
+		if(e1 == -1) {
+			conStr = subStr;
+			e1 = subStr.indexOf("#");
+			if(e1 != -1) {
+				conStr = subStr.substring(0, e1);
+			}
+		} else {
+			conStr = subStr.substring(0, e1);
+		}
+		var s2 = hrefStr.indexOf('_act=');
+		if(s2 > 0) {
+			subStr = hrefStr.substr(s2 + 5);
+			var e2 = subStr.indexOf("&");
+			if(e2 == -1) {
+				actStr = subStr;
+				e2 = subStr.indexOf("#");
+				if(e2 != -1) {
+					actStr = subStr.substring(0, e2);
+				}
+			} else {
+				actStr = subStr.substring(0, e2);
+			}
+			var s3 = hrefStr.indexOf('_param=');
+			if(s3 > 0) {
+				subStr = hrefStr.substr(s3 + 7);
+				var e2 = subStr.indexOf("&");
+				var paramStr = "[]";
+				if(e2 == -1) {
+					paramStr = subStr;
+					e2 = subStr.indexOf("#");
+					if(e2 != -1) {
+						paramStr = subStr.substring(0, e2);
+					}
+				} else {
+					paramStr = subStr.substring(0, e2);
+				}
+				params = eval("(" + paramStr + ")");
+			}
+			mvc.ctl(conStr).sendMsg(actStr, params);
+		}else{
+			mvc.log.i("_act is not found in static link");
+		}
+
+	}
+
+});

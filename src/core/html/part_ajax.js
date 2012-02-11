@@ -4,19 +4,32 @@
 
 mvc.ext(mvc.html, "ajax", new (function() {
 	var _props = {
-		cachedHtml : {}
+		cachedHtml : {},
+		cfg_ajax:null
 	};
 	var _private = {
+		init:function(){
+			mvc.cfg.addItem("html.ajax",function(opt){
+				if (opt.ajax===undefined){
+					mvc.cfg.err("ajax");
+					return false;
+				}
+				_props.cfg_ajax=opt.ajax;
+			})
+		},
 		ajax : function(defparam, userParam) {
 			var param = defparam;
-			if(userParam !== undefined) {
+			if( _props.cfg_ajax!=null) {// global configuration
+				for (var key in _props.cfg_ajax){
+					param[key]=_props.cfg_ajax[key];
+				}
+			}
+			if(userParam !== undefined) { // user configuration
 				for(var key in userParam) {
 					param[key] = userParam[key];
 				}
 			}
-			if( typeof mvc.opt.xhr != "undefined") {//fix some issues of jQuery
-				param.xhr = mvc.opt.xhr;
-			}
+			
 			return $.ajax(param);
 		},
 		asyncLoad : function(path, callback, userParam) {

@@ -33,6 +33,16 @@ mvc.ext(mvc.html,"element",function(){
 	//TODO add confg check
 	mvc.html.parser.removeScopeItem("element");
 	mvc.html.parser.addScopeItem("element",_element);
+	
 });
 
 mvc.html.element();
+
+mvc.cfg.addItem("html_element",function(opt){
+	if (opt.elementPath==undefined){
+		mvc.cfg.err("elementPath");
+		return false;
+	}
+});
+
+

@@ -9,9 +9,6 @@
 _app_={ // Settings
   xhr:undefined,
   appContainer:"#pages",
-  rootFile:"./index.html", //html file path that imported jQuery-neat-mvc library. It could be absolute path or relative path.
-  appPath:"app/", // relative path for application folder.
-  controllerPath:"app/Controller",
   modelPath:"app/Model",
   layoutPath:"app/layout",
   pluginPath:"app/plugins",

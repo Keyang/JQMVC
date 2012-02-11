@@ -152,5 +152,27 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		} else {
 			bindEvent();
 		}
+	},
+	setupUIData:function(obj){
+		this.uidata=obj;
 	}
 }));
+
+mvc.cfg.addItem("html.domview",function(opt){
+	if (opt.interfaces==undefined){
+		mvc.cfg.err("interfaces");
+		return false;
+	}
+	if (opt.interfaces.goBackPage==undefined){
+		mvc.cfg.err("interfaces.goBackPage");
+		return false;
+	}
+	if (opt.interfaces.goForwPage==undefined){
+		mvc.cfg.err("interfaces.goForwPage");
+		return false;
+	}
+	if (opt.pagePath==undefined){
+		mvc.cfg.err("pagePath");
+		return false;
+	}
+});
