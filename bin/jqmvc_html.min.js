@@ -13,8 +13,8 @@
 _app_={ 
   ajax:{}, //ajax configurations. checkout jqueyr ajax parameter.
   appContainer:"#pages", //the element in which the app will be rendered. it could be any jquery selector. 
-  elementPath:"app/view/elements", //the absolute path of element folder
-  pagePath:"app/view/pages", // the absolute path of page folder
+  elementPath:"app/elements", //the absolute path of element folder
+  pagePath:"app/view", // the absolute path of page folder
   interfaces:{ //User-defined implementation according to their descriptions. They are affected by UI library chosen.
     /**
      * This is invoked when viewer finished initilising loading page and ask UI to render page
