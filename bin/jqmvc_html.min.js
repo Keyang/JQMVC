@@ -6,7 +6,11 @@
  * Licensed under the MIT
  */
 
-_app_={ // Settings
+/**
+ *	Configurations
+ */
+
+_app_={ 
   ajax:{}, //ajax configurations. checkout jqueyr ajax parameter.
   appContainer:"#pages", //the element in which the app will be rendered. it could be any jquery selector. 
   elementPath:"app/view/elements", //the absolute path of element folder
