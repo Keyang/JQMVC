@@ -13,13 +13,14 @@ YUI_COMPRESSOR_PATH = "../lib/yui.jar";
 SCRIPT_PATTERN = re.compile(r"(<script)(.*?)(src=)([\"|'])(.*?)([\"|'])(.*?)(>(</script>)?)");
 CSS_PATTERN = re.compile(r"(<link)(.*?)(href=)([\"|'])(.*?)([\"|'])(.*?)(>)");
 IGNORE_PATTERN = re.compile(r"(<!--BEGIN-FH-IGNORE-->)(.*?)(<!--END-FH-IGNORE-->)", re.DOTALL);
-tar_pack="";
+tar_pack = "";
 
 JS_HTTP = [];
-EXPORTED_PATH="../bin";
+EXPORTED_PATH = "../bin";
 INDEX_DEV_FILE = "";
-MERGED_FILE="";
-MINIFIED_FILE="";
+MERGED_FILE = "";
+MINIFIED_FILE = "";
+cfg_file = "";
 
 def readIndexFile():
   indexFilePath = PATH_PREFIX + INDEX_DEV_FILE;
@@ -37,7 +38,7 @@ def findScripts(content):
   if len(m) > 0:
     for match in m:
       script = match[4];
-      print("Found "  + script);
+      print("Found " + script);
       if script.startswith('http'):
         global JS_HTTP;
         JS_HTTP.append(script);
@@ -95,7 +96,7 @@ def mergeFiles(fileList, type):
       content = res.read();
       stringBuffer.write(content);
   
-  mergedFilePath  = EXPORTED_PATH + "/"+MERGED_FILE+"." + type;
+  mergedFilePath = EXPORTED_PATH + "/" + MERGED_FILE + "." + type;
   if os.path.exists(mergedFilePath):
     os.remove(mergedFilePath);
   
@@ -105,10 +106,10 @@ def mergeFiles(fileList, type):
   mergedFile.close();
   stringBuffer.close();  
   print("all " + type + " files are merged : " + mergedFilePath);
-  doMinify(mergedFilePath,type);
+  doMinify(mergedFilePath, type);
   
-def doMinify(originFile,type):
-  minifedFilePath = EXPORTED_PATH + "/"+MINIFIED_FILE+"." + type;
+def doMinify(originFile, type):
+  minifedFilePath = EXPORTED_PATH + "/" + MINIFIED_FILE + "." + type;
   if os.path.exists(minifedFilePath):
     os.remove(minifedFilePath);
     
@@ -126,28 +127,71 @@ def redefinevars():
   global MERGED_FILE;
   global MINIFIED_FILE;
   global tar_pack;
+  global cfg_file;
   INDEX_DEV_FILE = "/index-{0}.html".format(tar_pack);
-  MERGED_FILE="jqmvc_{0}_debug".format(tar_pack);
-  MINIFIED_FILE="jqmvc_{0}.min".format(tar_pack);
- 
+  MERGED_FILE = "jqmvc_{0}_debug".format(tar_pack);
+  MINIFIED_FILE = "jqmvc_{0}.min".format(tar_pack);
+  cfg_file = PATH_PREFIX + "/core/" + tar_pack + "/default_cfg.js";
       
+def mergeCfgFile():
+    global cfg_file;
+    global MERGED_FILE;
+    global MINIFIED_FILE;
+    global EXPORTED_PATH;
+    
+    if not os.path.exists(cfg_file):
+        print("Cannot find configuration file: "+cfg_file);
+    else:
+        mergedFilePath = EXPORTED_PATH + "/" + MERGED_FILE + ".js";
+        minifiedFilePath= EXPORTED_PATH + "/" + MINIFIED_FILE + ".js";
+        print ("Start to merge config file:"+cfg_file);
+        cfgfile=open(cfg_file,'r');
+        cfgContent=cfgfile.read();
+        if not os.path.exists(mergedFilePath):
+            print("Cannot find Merged Script File:"+mergedFilePath);
+        else:
+            mergedFile=open(mergedFilePath,'r');
+            mergedData=mergedFile.read();
+            mergedFile.close();
+            mergedData=cfgContent+'\n'+mergedData;
+            mergedFile=open(mergedFilePath,'w');
+            mergedFile.write(mergedData);
+            mergedFile.flush();
+            mergedFile.close();
+       
+        if not os.path.exists(minifiedFilePath):
+            print("Cannot find Minified Script File:"+minifiedFilePath);
+        else:
+            mergedFile=open(minifiedFilePath,'r');
+            mergedData=mergedFile.read();
+            mergedFile.close();
+            mergedData=cfgContent+'\n'+mergedData;
+            mergedFile=open(minifiedFilePath,'w');
+            mergedFile.write(mergedData); 
+            mergedFile.flush();
+            mergedFile.close();
+        
+        
+        
+
 def main():
   global YUI_COMPRESSOR_PATH;
   if not os.path.exists(YUI_COMPRESSOR_PATH):
     print("Can not find file " + YUI_COMPRESSOR_PATH);
     sys.exit(2);
-  if len(sys.argv)!=2:
+  if len(sys.argv) != 2:
       print("Usage: pythong build.py {html}");
       sys.exit(3);
   
   global PATH_PREFIX;
   global tar_pack;
   
-  tar_pack=sys.argv[1];
-  PATH_PREFIX='../src';
+  tar_pack = sys.argv[1];
+  PATH_PREFIX = '../src';
   redefinevars();
-  print ("Start to build folder:"+PATH_PREFIX);
+  print ("Start to build folder:" + PATH_PREFIX);
   readIndexFile();
+  mergeCfgFile();
   
   
 if __name__ == '__main__':

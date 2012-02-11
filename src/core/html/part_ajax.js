@@ -90,6 +90,7 @@ mvc.ext(mvc.html, "ajax", new (function() {
 			}
 		}
 	};
+	_private.init();
 	var _public = {
 		/**
 		 * Synchorous ajax call

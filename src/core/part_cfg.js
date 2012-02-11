@@ -34,7 +34,11 @@ mvc.ext(mvc.cls,"cfg",mvc.Class.create({
 		};
 	},
 	err:function(com,extra){
-		throw (com +" object is required in app configuration."+extra?extra : "");
+		var str=" object is required in app configuration.";
+		if (typeof extra !="undefined"){
+			str+=extra;
+		}
+		throw (com +str);
 	}
 }));
 
