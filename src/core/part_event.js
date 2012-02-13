@@ -42,7 +42,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 */
 		unbind : function(eventType, key) {
 			return _private.unbind(eventType, key);
-		},
+		}
 	};
 
 	var _private = {

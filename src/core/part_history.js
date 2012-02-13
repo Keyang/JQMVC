@@ -24,7 +24,7 @@ mvc.ext(mvc.cls, "history", function() {
 		}
 	}
 	var _props = {
-		stack : [],
+		stack : []
 	}
 	var _private = {
 		push : function(pageID) {

@@ -281,6 +281,12 @@ mvc.ext(mvc['cls'], '_log', function() {
 	}
 	var _private = {
 		log : function(str) {
+			if (typeof console==="undefined"){
+				console={};
+			}
+			if (console.log==="undefined"){
+				console.log=function(){};
+			}
 			console.log(str);
 		}
 	}
@@ -465,7 +471,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 		 */
 		unbind : function(eventType, key) {
 			return _private.unbind(eventType, key);
-		},
+		}
 	};
 
 	var _private = {
@@ -616,7 +622,7 @@ mvc.ext(mvc.cls, "history", function() {
 		}
 	}
 	var _props = {
-		stack : [],
+		stack : []
 	}
 	var _private = {
 		push : function(pageID) {

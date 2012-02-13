@@ -8,6 +8,12 @@ mvc.ext(mvc['cls'], '_log', function() {
 	}
 	var _private = {
 		log : function(str) {
+			if (typeof console==="undefined"){
+				console={};
+			}
+			if (console.log==="undefined"){
+				console.log=function(){};
+			}
 			console.log(str);
 		}
 	}
