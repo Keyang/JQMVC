@@ -1,8 +1,8 @@
 /*
- * jQuery Neat MVC framework Setting
- * http://code.google.com/p/jquery-neat-mvc/
+ * JQMVC framework
+ * https://github.com/Keyang/JQMVC
  *
- * Copyright 2011, Keyang Xiang
+ * Copyright 2011-2012, Keyang Xiang
  * Licensed under the MIT
  */
 
@@ -14,7 +14,11 @@ _app_={
   ajax:{}, //ajax configurations. checkout jqueyr ajax parameter.
   appContainer:"#pages", //the element in which the app will be rendered. it could be any jquery selector. 
   elementPath:"app/elements", //the absolute path of element folder
-  pagePath:"app/view", // the absolute path of page folder
+  pagePath:"app/views", // the absolute path of page folder
+  onStart:{ //default user action once user opens the app.
+  	controller:"nav",
+  	method:"home"
+  },
   interfaces:{ //User-defined implementation according to their descriptions. They are affected by UI library chosen.
     /**
      * This is invoked when viewer finished initilising loading page and ask UI to render page

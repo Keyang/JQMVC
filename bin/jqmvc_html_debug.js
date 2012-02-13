@@ -1,8 +1,8 @@
 /*
- * jQuery Neat MVC framework Setting
- * http://code.google.com/p/jquery-neat-mvc/
+ * JQMVC framework
+ * https://github.com/Keyang/JQMVC
  *
- * Copyright 2011, Keyang Xiang
+ * Copyright 2011-2012, Keyang Xiang
  * Licensed under the MIT
  */
 
@@ -14,7 +14,11 @@ _app_={
   ajax:{}, //ajax configurations. checkout jqueyr ajax parameter.
   appContainer:"#pages", //the element in which the app will be rendered. it could be any jquery selector. 
   elementPath:"app/elements", //the absolute path of element folder
-  pagePath:"app/view", // the absolute path of page folder
+  pagePath:"app/views", // the absolute path of page folder
+  onStart:{ //default user action once user opens the app.
+  	controller:"nav",
+  	method:"home"
+  },
   interfaces:{ //User-defined implementation according to their descriptions. They are affected by UI library chosen.
     /**
      * This is invoked when viewer finished initilising loading page and ask UI to render page
@@ -341,12 +345,29 @@ mvc.ext(mvc,"ctl",function(name){
 		 */
 		postMSG:function(msg,args,callback){
 			return _private.postMSG(msg,args,callback);
+		},
+		/**
+		 * Check if specified controller and method exists.
+		 */
+		checkCtl:function(method){
+			return _private.checkCtl(method);
 		}
 	};
 	var _props={
 		_ctl:null
 	};
 	var _private={
+		checkCtl:function(method){
+			if (!_private.isCtlExisted(name)){
+				return false;
+			}
+			if (method){
+				if (!mvc.controllers[name][method]){
+					return false;
+				}
+			}
+			return true;
+		},
 		checkMSG:function(msg){
 			var ctl=_props._ctl;
 			if (ctl[msg]!=undefined){
@@ -361,6 +382,9 @@ mvc.ext(mvc,"ctl",function(name){
 			return false;
 		},
 		sendMSG:function(msg,args){
+			if (!_private.isCtlExisted(name)){
+				throw("Controller with name:"+name+" Does not exist.");
+			}
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				return ctl[msg].apply(ctl,args);
@@ -368,6 +392,9 @@ mvc.ext(mvc,"ctl",function(name){
 			return;
 		},
 		postMSG:function(msg,args,callback){
+			if (!_private.isCtlExisted(name)){
+				throw("Controller with name:"+name+" Does not exist.");
+			}
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				setTimeout(function(){
@@ -380,9 +407,6 @@ mvc.ext(mvc,"ctl",function(name){
 			return;
 		},
 		init:function(){
-			if (!_private.isCtlExisted(name)){
-				throw("Controller with name:"+name+" Does not exist.");
-			}
 			_props._ctl=mvc.controllers[name];
 		},
 		isCtlExisted:function(name){
@@ -1340,10 +1364,17 @@ mvc.cfg.addItem("html_element",function(opt){
  * ./html/part_permenant_link.js
  */
 
+mvc.cfg.addItem("html_startup_action",function(opt){
+	if  (opt.onStart===undefined){
+		mvc.err("onStart");
+		return false;
+	}
+})
+
 $(document).ready(function() {
 	var hrefStr = window.location.href;
-	var conStr = null;
-	var actStr = null;
+	var conStr = mvc.opt.onStart.controller;
+	var actStr = mvc.opt.onStart.method;
 	var params = [];
 	var s1 = hrefStr.indexOf('_ctl=');
 	if(s1 > 0) {
@@ -1388,10 +1419,16 @@ $(document).ready(function() {
 				params = eval("(" + paramStr + ")");
 			}
 			mvc.ctl(conStr).sendMSG(actStr, params);
+			return;
 		}else{
 			mvc.log.i("_act is not found in static link");
 		}
 
 	}
-
+	if (mvc.ctl(conStr).checkCtl(actStr)){
+		mvc.ctl(conStr).sendMSG(actStr,[]);
+	}else{
+		mvc.log.i("default controller or method is not found.");
+	}
+	return;
 });
