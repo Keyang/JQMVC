@@ -15,12 +15,29 @@ mvc.ext(mvc,"ctl",function(name){
 		 */
 		postMSG:function(msg,args,callback){
 			return _private.postMSG(msg,args,callback);
+		},
+		/**
+		 * Check if specified controller and method exists.
+		 */
+		checkCtl:function(method){
+			return _private.checkCtl(method);
 		}
 	};
 	var _props={
 		_ctl:null
 	};
 	var _private={
+		checkCtl:function(method){
+			if (!_private.isCtlExisted(name)){
+				return false;
+			}
+			if (method){
+				if (!mvc.controllers[name][method]){
+					return false;
+				}
+			}
+			return true;
+		},
 		checkMSG:function(msg){
 			var ctl=_props._ctl;
 			if (ctl[msg]!=undefined){
@@ -35,6 +52,9 @@ mvc.ext(mvc,"ctl",function(name){
 			return false;
 		},
 		sendMSG:function(msg,args){
+			if (!_private.isCtlExisted(name)){
+				throw("Controller with name:"+name+" Does not exist.");
+			}
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				return ctl[msg].apply(ctl,args);
@@ -42,6 +62,9 @@ mvc.ext(mvc,"ctl",function(name){
 			return;
 		},
 		postMSG:function(msg,args,callback){
+			if (!_private.isCtlExisted(name)){
+				throw("Controller with name:"+name+" Does not exist.");
+			}
 			var ctl=_props._ctl;
 			if (_private.checkMSG(msg)){
 				setTimeout(function(){
@@ -54,9 +77,6 @@ mvc.ext(mvc,"ctl",function(name){
 			return;
 		},
 		init:function(){
-			if (!_private.isCtlExisted(name)){
-				throw("Controller with name:"+name+" Does not exist.");
-			}
 			_props._ctl=mvc.controllers[name];
 		},
 		isCtlExisted:function(name){
