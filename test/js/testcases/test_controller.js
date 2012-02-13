@@ -12,6 +12,14 @@ mvc.ext(mvc.controllers, "myCtl", {
 		return a + b;
 	}
 })
+mvc.ext(mvc.controllers,"start",{
+	home:function(){
+		//static link test: index.html?_ctl=start&_act=home
+		var homeView=mvc.viewMgr.init("home");
+		homeView.show();
+		expect("home").toEqual(mvc.viewMgr.get().$().attr("id"));
+	}
+});
 
 describe("controller", function() {
 	it("can send synchronous/asynchronous message", function() {
@@ -28,4 +36,4 @@ describe("controller", function() {
 		});
 		view.show();
 	})
-})
+});

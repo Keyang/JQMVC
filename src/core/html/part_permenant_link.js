@@ -51,7 +51,7 @@ $(document).ready(function() {
 				}
 				params = eval("(" + paramStr + ")");
 			}
-			mvc.ctl(conStr).sendMsg(actStr, params);
+			mvc.ctl(conStr).sendMSG(actStr, params);
 		}else{
 			mvc.log.i("_act is not found in static link");
 		}
