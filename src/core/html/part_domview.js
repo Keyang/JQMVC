@@ -5,11 +5,37 @@
  */
 mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	uidata : {},
+	model:null,
 	"wrapperTag" : "div",
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
 		$super(name,mvc.html.domViewMgr);
+	},
+	update:function(model){
+		var data=this.fire("beforeUpdate",this.model.getData(),undefined,false);
+		if (!data){
+			data=this.model.getData();
+		}
+		this.uidata=data;
+		this.loadDom(true);
+		var currentView=mvc.html.domViewMgr.get();
+		if (currentView){
+			var currentViewName=mvc.html.domViewMgr.get().getName();
+			if (currentViewName===this.getName()){
+				this.display();
+			}
+		}
+	},
+	/**
+	 * bind model to current view
+	 */
+	bindModel:function(model){
+		if (this.model){
+			this.model.unsubscribe(this.getName());
+		}
+		this.model=model;
+		this.model.subscribe(this);
 	},
 	/**
 	 * Synchorously load / render / display current view.
@@ -100,6 +126,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		if(this.loadStatus === "loaded") {
 			if(mvc.$("#" + this.getName()).length === 0 || isReload === true) {
+				if (isReload){
+					this.removeDom(); //may conflict with some UI libraries
+				}
 				mvc.$().append(this.op_buf);
 				this.fire("domReady", this.$(), undefined, false);
 			}
@@ -153,8 +182,8 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 			bindEvent();
 		}
 	},
-	setupUIData:function(obj){
-		this.uidata=obj;
+	setUIData:function(data){
+		this.uidata=data;
 	}
 }));
 

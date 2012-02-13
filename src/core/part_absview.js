@@ -2,11 +2,12 @@
  *  abstract view class
  * part_viewcls.js
  */
-mvc.ext(mvc.cls, "absview", mvc.Class.create({
+mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer,{
 		"viewMgr":null,
 		"name" : "undefined",
 		"op_buf" : "",
 		"events" : null,
+		"model":null,
 		/**
 		 * class constructor
 		 */
@@ -23,6 +24,9 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		},
 		show : function() {
 			throw("Show method should be overwritten.");
+		},
+		update:function(){
+			throw("update method should be overwritten.");
 		},
 		/**
 		 * fire an event of both global and private.
@@ -61,5 +65,11 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		display:function(){
 			this.fire("displayed", [this,this.viewMgr], undefined, false);
 			return this.op_buf;
+		},
+		/**
+		 * overwrite observer notify method. Notification should be from subscribing models.
+		 */
+		notify:function(){
+			this.update();
 		}
 }));

@@ -180,6 +180,16 @@ mvc.ext(mvc, "Class", (function() {
 			subclass.prototype = parent.prototype;
 			mvclass.prototype = new subclass;
 			parent.subclasses.push(mvclass);
+			var anc=mvclass.prototype;
+			for (var key in anc){
+				var data=anc[key];
+				if (typeof data==="object"){
+					if (properties[0][key]===undefined){
+						properties[0][key]={};
+					}
+					mvc.util.copyJSON(data,properties[0][key],false);
+				}
+			}
 		}
 
 		mvclass.addMethods(properties[0]);
@@ -212,6 +222,9 @@ mvc.ext(mvc, "Class", (function() {
 						curFunc.apply(this, argu);
 					}
 				})();
+			}
+			if (typeof value==="object"){
+				
 			}
 			this.prototype[property] = value;
 		}
@@ -271,6 +284,49 @@ mvc.ext(mvc.cls,"cfg",mvc.Class.create({
 }));
 
 mvc.cfg=new mvc.cls.cfg("cfg");
+/**
+ * Observer
+ * part_observer.js
+ */
+
+mvc.ext(mvc.cls, "observer", mvc.Class.create({
+	notify : function() {
+		throw ("notify is not overwritten");
+	}
+}));
+
+mvc.ext(mvc.cls, "subject", mvc.Class.create(mvc.cls.observer,{
+	props : {
+		observers : {},
+		name:null
+	},
+	initialise:function(name){
+		this.props.name=name;
+	},
+	getName:function(){
+		return this.props.name;
+	},
+	unsubscribe : function(name) {
+		if (this.props.observers[name]){
+			delete this.props.observers[name];
+		}
+	},
+	subscribe : function(name, observer) {
+		if (observer.notify===undefined){
+			throw("subscribed object should be subclass of observer");
+		}
+		this.props.observers[name]=observer;
+	},
+	notifyAll : function() {
+		for(var key in this.props.observers) {
+			var ob = this.props.observers[key];
+			ob.notify.apply(ob,arguments);
+		}
+	},
+	notify:function(){
+		//empty
+	}
+}));
 /**
  * console Log definition
  * part_log.js
@@ -427,6 +483,15 @@ mvc.ext(mvc,"ctl",function(name){
 });
 
 mvc.ext(mvc,"controllers",{}); //empty controller entry
+mvc.ext(mvc,"regCtl",function(name,controllerObj){
+	if (typeof controllerObj!="object"){
+		mvc.log.e("Controller should be a JSON object!");
+		return false;
+	}
+	mvc.ext(mvc.controllers,name,controllerObj);
+	return true;
+});
+
 /**
  * Part_event.js
  */
@@ -575,6 +640,179 @@ mvc.ext(mvc.cls, "event", function(that) {
 	};
 	return _public;
 });
+/**
+ * Model Definition
+ *
+ */
+mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
+	props : {
+		name : null,
+		data : null,
+		sorter : null,
+		filter : null,
+		proxy : null,
+		_data : null
+	},
+	subscribe : function($super, view) {
+		var name = view.getName();
+		$super(name, view);
+	},
+	initialise : function(opt) {
+		if(!opt.name) {
+			throw ("Model name should be specified");
+		}
+		for(var key in opt) {
+			this.props[key] = opt[key];
+		}
+	},
+	setData : function(data) {
+		this.props.events
+		this.props.data = data;
+	},
+	setFilter : function(filter) {
+		this.props.filter = filter;
+		this.reset();
+		this.arrangeData();
+
+	},
+	setSorter : function(sorter) {
+		this.props.sorter = sorter;
+		this.reset();
+		this.arrangeData();
+	},
+	reset : function() {
+		this.props.data = {};
+		mvc.util.copyJSON(this.props._data, this.props.data, true);
+	},
+	/**
+	 * adapt filter and sorter to current data
+	 */
+	arrangeData : function() {
+		if(this.props.filter === null && this.props.sorter === null) {
+			return true;
+		}
+		if(this.props.data instanceof Array) {
+			if(this.props.filter) {
+				for(var i = 0; i < this.props.data.length; i++) {
+					var data = this.props.data[i];
+					var res = this.props.filter(data);
+					if(res === false) {
+						this.props.data.splice(i, 1);
+					}
+				}
+			}
+			if(this.props.sorter) {
+				//TODO sorter algorithm
+			}
+
+		}
+	},
+	/**
+	 * load data to 'local'
+	 */
+	load : function(params,callback) {
+		if(this.props.proxy) {
+			var that = this;
+			this.props.proxy.load(params,function(data) {
+				that.props._data = data;
+				that.reset();
+				that.arrangeData();
+				if(callback) {
+					callback(data);
+				}
+			});
+		} else {
+			mvc.log.e("Proxy is not setup in model:" + this.props.name);
+		}
+	},
+	/**
+	 * save data to 'remote'
+	 */
+	save : function(params,callback) {
+		if(this.props.proxy) {
+			var that = this;
+			this.props.proxy.save(this.props.data, params,function(res) {
+				if(callback) {
+					callback(res);
+				}
+			});
+		} else {
+			mvc.log.e("Proxy is not setup in model:" + this.props.name);
+		}
+	},
+	exec : function(cmd, params, callback) {
+		if(this.props.proxy) {
+			var that = this;
+			this.props.proxy.exec(cmd, params, function(res) {
+				if(callback) {
+					callback(res);
+				}
+			});
+		} else {
+			mvc.log.e("Proxy is not setup in model:" + this.props.name);
+		}
+	},
+	/**
+	 * set local data
+	 */
+	setData : function(data) {
+		this.props.data = data;
+	},
+	/**
+	 * return local cached data;
+	 */
+	getData : function() {
+		return this.props.data;
+	},
+	/**
+	 * return raw data from remote
+	 */
+	getRawData : function() {
+		return this.props._data;
+	}
+}));
+mvc.ext(mvc, "models", {});
+mvc.ext(mvc, "modelMgr", {
+	regModel : function(opt) {
+		if(!opt.name) {
+			throw ("Model name should be specified");
+		}
+		mvc.ext(mvc.models, opt.name, new mvc.cls.model(opt));
+		return mvc.models[opt.name];
+	},
+	get:function(name){
+		return mvc.models[name];
+	}
+});
+/**
+ * Model Proxy
+ * part_proxy.js
+ * 
+ */
+
+mvc.ext(mvc.cls,"proxy",mvc.Class.create(mvc.cls.observer,{
+	load:function(callback){
+		throw("load method is not implemented");
+	},
+	save:function(res,callback){
+		throw("save method is not implemented");
+	},
+	exec:function(cmd,params,callback){
+		if (this[cmd]===undefined){
+			throw("command:"+cmd+" is not implemented in proxy.");
+		}
+		params.push(callback);
+		return this[cmd].apply(this,params);
+	}
+}));
+
+mvc.ext(mvc,"proxy",{});
+
+mvc.ext(mvc,"regProxy",function(){
+	
+});
+
+
 mvc.ext(mvc,"string",{
 	error:{
 		view:{
@@ -663,11 +901,12 @@ mvc.ext(mvc.cls, "history", function() {
  *  abstract view class
  * part_viewcls.js
  */
-mvc.ext(mvc.cls, "absview", mvc.Class.create({
+mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer,{
 		"viewMgr":null,
 		"name" : "undefined",
 		"op_buf" : "",
 		"events" : null,
+		"model":null,
 		/**
 		 * class constructor
 		 */
@@ -684,6 +923,9 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		},
 		show : function() {
 			throw("Show method should be overwritten.");
+		},
+		update:function(){
+			throw("update method should be overwritten.");
 		},
 		/**
 		 * fire an event of both global and private.
@@ -722,6 +964,12 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create({
 		display:function(){
 			this.fire("displayed", [this,this.viewMgr], undefined, false);
 			return this.op_buf;
+		},
+		/**
+		 * overwrite observer notify method. Notification should be from subscribing models.
+		 */
+		notify:function(){
+			this.update();
 		}
 }));
 /**
@@ -953,11 +1201,37 @@ mvc.ext(mvc.html, "ajax", new (function() {
  */
 mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	uidata : {},
+	model:null,
 	"wrapperTag" : "div",
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
 		$super(name,mvc.html.domViewMgr);
+	},
+	update:function(model){
+		var data=this.fire("beforeUpdate",this.model.getData(),undefined,false);
+		if (!data){
+			data=this.model.getData();
+		}
+		this.uidata=data;
+		this.loadDom(true);
+		var currentView=mvc.html.domViewMgr.get();
+		if (currentView){
+			var currentViewName=mvc.html.domViewMgr.get().getName();
+			if (currentViewName===this.getName()){
+				this.display();
+			}
+		}
+	},
+	/**
+	 * bind model to current view
+	 */
+	bindModel:function(model){
+		if (this.model){
+			this.model.unsubscribe(this.getName());
+		}
+		this.model=model;
+		this.model.subscribe(this);
 	},
 	/**
 	 * Synchorously load / render / display current view.
@@ -1048,6 +1322,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		if(this.loadStatus === "loaded") {
 			if(mvc.$("#" + this.getName()).length === 0 || isReload === true) {
+				if (isReload){
+					this.removeDom(); //may conflict with some UI libraries
+				}
 				mvc.$().append(this.op_buf);
 				this.fire("domReady", this.$(), undefined, false);
 			}
@@ -1101,8 +1378,8 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 			bindEvent();
 		}
 	},
-	setupUIData:function(obj){
-		this.uidata=obj;
+	setUIData:function(data){
+		this.uidata=data;
 	}
 }));
 
@@ -1377,8 +1654,7 @@ mvc.cfg.addItem("html_startup_action",function(opt){
 	}
 })
 
-$(document).ready(function() {
-	var hrefStr = window.location.href;
+mvc.ext(mvc.cls,"staticLink",function(hrefStr){
 	var conStr = mvc.opt.onStart.controller;
 	var actStr = mvc.opt.onStart.method;
 	var params = [];
@@ -1438,3 +1714,62 @@ $(document).ready(function() {
 	}
 	return;
 });
+$(document).ready(function() {
+	var hrefStr = window.location.href;
+	return mvc.cls.staticLink(hrefStr);
+});
+/**
+ *
+ * ajax proxy
+ *
+ * ./html/part_ajax_proxy.js
+ */
+
+mvc.ext(mvc.proxy, "ajax", mvc.Class.create(mvc.cls.proxy, {
+	props : {
+		url : "",
+		cfg_ajax:null,
+		dataType:"text"
+	},
+	load : function(params, callback) {
+		var url=this.props.url;
+		if (params!=undefined&&typeof params==="object"){
+			url+="?";
+			for (var key in params){
+				url+=key+"="+params[key]+"&";
+			}
+		}
+		var that=this;
+		var param = {
+			async : true,
+			url : url,
+			type : "GET",
+			dataType : this.props.dataType,
+			success : function(res) {
+				if (callback){
+					callback(res);
+				}
+			},
+			error : function(xhr, text, err) {
+				mvc.log.e(text, "asyncLoad", that.props.url);
+				if (callback){
+					callback(res);
+				}
+			}
+		};
+		if(this.props.cfg_ajax != null) {// global configuration
+			for(var key in this.props.cfg_ajax) {
+				param[key] = this.props.cfg_ajax[key];
+			}
+		}
+		$.ajax(param);
+	},
+	initialise:function(url,dataType){
+		if (url==undefined){
+			throw("Ajax proxy needs url as param of constructor.");
+		}
+		this.props.url=url;
+		this.props.cfg_ajax=mvc.opt.ajax;
+		this.props.dataType=dataType;
+	}
+}));

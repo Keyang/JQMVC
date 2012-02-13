@@ -11,8 +11,7 @@ mvc.cfg.addItem("html_startup_action",function(opt){
 	}
 })
 
-$(document).ready(function() {
-	var hrefStr = window.location.href;
+mvc.ext(mvc.cls,"staticLink",function(hrefStr){
 	var conStr = mvc.opt.onStart.controller;
 	var actStr = mvc.opt.onStart.method;
 	var params = [];
@@ -71,4 +70,8 @@ $(document).ready(function() {
 		mvc.log.i("default controller or method is not found.");
 	}
 	return;
+});
+$(document).ready(function() {
+	var hrefStr = window.location.href;
+	return mvc.cls.staticLink(hrefStr);
 });

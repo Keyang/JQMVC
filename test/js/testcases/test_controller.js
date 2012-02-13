@@ -35,5 +35,16 @@ describe("controller", function() {
 			})
 		});
 		view.show();
-	})
+	});
+	
+	it ("can check if controller exists",function(){
+		var res=mvc.ctl("nothiscontroller").checkCtl();
+		expect(false).toEqual(res);
+	});
+	
+	it ("can check if method exists",function(){
+		var res=mvc.ctl("myCtl").checkCtl("nothismethod");
+		expect(false).toEqual(res);
+	});
 });
+

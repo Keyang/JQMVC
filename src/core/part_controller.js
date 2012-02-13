@@ -91,3 +91,12 @@ mvc.ext(mvc,"ctl",function(name){
 });
 
 mvc.ext(mvc,"controllers",{}); //empty controller entry
+mvc.ext(mvc,"regCtl",function(name,controllerObj){
+	if (typeof controllerObj!="object"){
+		mvc.log.e("Controller should be a JSON object!");
+		return false;
+	}
+	mvc.ext(mvc.controllers,name,controllerObj);
+	return true;
+});
+

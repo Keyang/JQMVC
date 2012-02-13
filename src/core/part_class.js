@@ -50,6 +50,16 @@ mvc.ext(mvc, "Class", (function() {
 			subclass.prototype = parent.prototype;
 			mvclass.prototype = new subclass;
 			parent.subclasses.push(mvclass);
+			var anc=mvclass.prototype;
+			for (var key in anc){
+				var data=anc[key];
+				if (typeof data==="object"){
+					if (properties[0][key]===undefined){
+						properties[0][key]={};
+					}
+					mvc.util.copyJSON(data,properties[0][key],false);
+				}
+			}
 		}
 
 		mvclass.addMethods(properties[0]);
@@ -82,6 +92,9 @@ mvc.ext(mvc, "Class", (function() {
 						curFunc.apply(this, argu);
 					}
 				})();
+			}
+			if (typeof value==="object"){
+				
 			}
 			this.prototype[property] = value;
 		}

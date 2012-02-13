@@ -166,7 +166,33 @@ describe("element",function(){
 		view.show();
 		expect(5).toEqual($(".myelement").length);
 		
-	})
+	});
 });
+
+describe ("permenant link",function(){
+	var val=-1;
+	mvc.regCtl("permLink",{
+		getValue:function(){
+			val=5;
+			return 5;
+		},
+		calc:function(a,b){
+			val=a+b;
+			return a+b;
+		}
+	});
+	it ("can parse url to user actions",function(){
+		var testUrl="index.html?_ctl=permLink&_act=getValue";
+		mvc.cls.staticLink(testUrl);
+		expect(5).toEqual(val);
+	});
+	it ("can pass params to controller methods",function(){
+		var testUrl="index.html?_ctl=permLink&_act=calc&_param=[3,5]";
+		mvc.cls.staticLink(testUrl);
+		expect(8).toEqual(val);
+	});
+});
+
+
 
 
