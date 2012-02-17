@@ -6,7 +6,6 @@ describe("View", function() {
 		//init a new / used view
 		mvc.viewMgr.init("bindEvent" + i);
 		view = mvc.viewMgr.get("bindEvent" + i);
-
 	})
 	afterEach(function() {
 		view.show();

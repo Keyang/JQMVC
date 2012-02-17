@@ -53,7 +53,9 @@ mvc.ext(mvc, "Class", (function() {
 			var anc=mvclass.prototype;
 			for (var key in anc){
 				var data=anc[key];
-				if (typeof data==="object"){
+				if (data===null){
+					data,properties[0][key]=null;
+				}else if (typeof data==="object"){
 					if (properties[0][key]===undefined){
 						properties[0][key]={};
 					}

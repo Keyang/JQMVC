@@ -1,11 +1,10 @@
 /**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
- * ./html/part_viewcls.js
+ * ./html/part_domview.js
  */
 mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	uidata : {},
-	model:null,
 	"wrapperTag" : "div",
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
@@ -26,16 +25,6 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 				this.display();
 			}
 		}
-	},
-	/**
-	 * bind model to current view
-	 */
-	bindModel:function(model){
-		if (this.model){
-			this.model.unsubscribe(this.getName());
-		}
-		this.model=model;
-		this.model.subscribe(this);
 	},
 	/**
 	 * Synchorously load / render / display current view.
@@ -96,7 +85,11 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		// if(!_props.isUIdataLoaded) {
 		// _props.uidata = mvc.html.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
-		var uidata = mvc.util.copyJSON(this.uidata);
+		var uidata={};
+		if (this.model){
+			uidata=this.model.getData();
+		}
+		mvc.util.copyJSON(this.uidata,uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);

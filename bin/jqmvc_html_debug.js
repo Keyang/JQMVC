@@ -183,7 +183,9 @@ mvc.ext(mvc, "Class", (function() {
 			var anc=mvclass.prototype;
 			for (var key in anc){
 				var data=anc[key];
-				if (typeof data==="object"){
+				if (data===null){
+					data,properties[0][key]=null;
+				}else if (typeof data==="object"){
 					if (properties[0][key]===undefined){
 						properties[0][key]={};
 					}
@@ -901,76 +903,87 @@ mvc.ext(mvc.cls, "history", function() {
  *  abstract view class
  * part_viewcls.js
  */
-mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer,{
-		"viewMgr":null,
-		"name" : "undefined",
-		"op_buf" : "",
-		"events" : null,
-		"model":null,
-		/**
-		 * class constructor
-		 */
-		initialise : function(name,viewMgr) {
-			this.name = name;
-			this.viewMgr=viewMgr;
-			this.events=new mvc.cls.event(this);
-		},
-		/**
-		 * Echo data to output buffer
-		 */
-		echo : function(str) {
-			this.op_buf+=str;
-		},
-		show : function() {
-			throw("Show method should be overwritten.");
-		},
-		update:function(){
-			throw("update method should be overwritten.");
-		},
-		/**
-		 * fire an event of both global and private.
-		 * @param eventType event that will be fired.
-		 * @param param parameters will be passed in.
-		 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
-		 * @param async whether fire the events asynchrously. default is false
-		 */
-		fire : function(eventType, param, key, async) {
-			var res;
-			if (this.viewMgr && this.viewMgr!=null){
-			 	res = this.viewMgr.events.fire(eventType, param, key, async, this);
-			}
-			return this.events.fire(eventType, res, key, async);
-		},
-		getName : function() {
-			return this.name;
-		},
-		/**
-		 * remove this view
-		 */
-		remove : function() {
-			for(var key in this) {
-				if (typeof this[key] == "function" ){
-					this[key] = function() {};
-				}else{
-					this[key]=null;
-				}
-			}
-		},
-		/**
-		 * display current view
-		 * It will fire "displayed" event
-		 * Return displayed content
-		 */
-		display:function(){
-			this.fire("displayed", [this,this.viewMgr], undefined, false);
-			return this.op_buf;
-		},
-		/**
-		 * overwrite observer notify method. Notification should be from subscribing models.
-		 */
-		notify:function(){
-			this.update();
+mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer, {
+	"viewMgr" : null,
+	"name" : "undefined",
+	"op_buf" : "",
+	"events" : null,
+	"model" : null,
+	/**
+	 * bind model to current view
+	 */
+	bindModel : function(model) {
+		if(this.model) {
+			this.model.unsubscribe(this.getName());
 		}
+		this.model = model;
+		this.model.subscribe(this);
+	},
+	/**
+	 * class constructor
+	 */
+	initialise : function(name, viewMgr) {
+		this.name = name;
+		this.viewMgr = viewMgr;
+		this.events = new mvc.cls.event(this);
+	},
+	/**
+	 * Echo data to output buffer
+	 */
+	echo : function(str) {
+		this.op_buf += str;
+	},
+	show : function() {
+		throw ("Show method should be overwritten.");
+	},
+	update : function() {
+		throw ("update method should be overwritten.");
+	},
+	/**
+	 * fire an event of both global and private.
+	 * @param eventType event that will be fired.
+	 * @param param parameters will be passed in.
+	 * @param key handler that will be triggered. if ommited, all handlers of that event type will be triggered.
+	 * @param async whether fire the events asynchrously. default is false
+	 */
+	fire : function(eventType, param, key, async) {
+		var res;
+		if(this.viewMgr && this.viewMgr != null) {
+			res = this.viewMgr.events.fire(eventType, param, key, async, this);
+		}
+		return this.events.fire(eventType, res, key, async);
+	},
+	getName : function() {
+		return this.name;
+	},
+	/**
+	 * remove this view
+	 */
+	remove : function() {
+		for(var key in this) {
+			if( typeof this[key] == "function") {
+				this[key] = function() {
+				};
+			} else {
+				this[key] = null;
+			}
+		}
+	},
+	/**
+	 * display current view
+	 * It will fire "displayed" event
+	 * Return displayed content
+	 */
+	display : function() {
+		this.fire("displayed", [this, this.viewMgr], undefined, false);
+		return this.op_buf;
+	},
+	/**
+	 * overwrite observer notify method. Notification should be from subscribing models.
+	 */
+	notify : function() {
+		this.update();
+	}
 }));
 /**
  * Abstract view manager class
@@ -1197,11 +1210,10 @@ mvc.ext(mvc.html, "ajax", new (function() {
 /**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
- * ./html/part_viewcls.js
+ * ./html/part_domview.js
  */
 mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	uidata : {},
-	model:null,
 	"wrapperTag" : "div",
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
@@ -1222,16 +1234,6 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 				this.display();
 			}
 		}
-	},
-	/**
-	 * bind model to current view
-	 */
-	bindModel:function(model){
-		if (this.model){
-			this.model.unsubscribe(this.getName());
-		}
-		this.model=model;
-		this.model.subscribe(this);
 	},
 	/**
 	 * Synchorously load / render / display current view.
@@ -1292,7 +1294,11 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		// if(!_props.isUIdataLoaded) {
 		// _props.uidata = mvc.html.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
-		var uidata = mvc.util.copyJSON(this.uidata);
+		var uidata={};
+		if (this.model){
+			uidata=this.model.getData();
+		}
+		mvc.util.copyJSON(this.uidata,uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);
