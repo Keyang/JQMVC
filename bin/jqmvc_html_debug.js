@@ -98,7 +98,7 @@ mvc.ext(mvc, "util", {
 	copyJSON : function(jsonObj, toJson, override) {
 		var tmpObj = {};
 		if(toJson != undefined) {
-			tmpObj = toJson;
+			tmpObj = mvc.util.copyJSON(toJson,undefined,true);
 		}
 		//deep clone for setting json obj
 		var tmpOri = jsonObj;
@@ -132,7 +132,6 @@ mvc.ext(mvc, "util", {
  * part_class.js
  */
 mvc.ext(mvc, "Class", (function() {
-
 	function isFunction(param) {
 		if( typeof param == "function") {
 			return true;
@@ -167,12 +166,14 @@ mvc.ext(mvc, "Class", (function() {
 		if(isFunction(properties[0])) {
 			parent = properties.shift();
 		}
-
+		
 		function mvclass() {
+			this.props=mvc.util.copyJSON(mvclass.props,undefined,true);
 			this.initialise.apply(this, arguments);
 		}
 
 		apply(mvclass, mvc.Class.Methods);
+		mvclass.props={};
 		mvclass.superclass = parent;
 		mvclass.subclasses = [];
 
@@ -184,12 +185,12 @@ mvc.ext(mvc, "Class", (function() {
 			for (var key in anc){
 				var data=anc[key];
 				if (data===null){
-					data,properties[0][key]=null;
-				}else if (typeof data==="object"){
+					properties[0][key]=null;
+				}else if (typeof data==="object" && key==="props"){
 					if (properties[0][key]===undefined){
 						properties[0][key]={};
 					}
-					mvc.util.copyJSON(data,properties[0][key],false);
+					 properties[0][key]=mvc.util.copyJSON(data,properties[0][key],false);
 				}
 			}
 		}
@@ -226,7 +227,9 @@ mvc.ext(mvc, "Class", (function() {
 				})();
 			}
 			if (typeof value==="object"){
-				
+				if (key==="props"){
+					this.props=value;
+				}
 			}
 			this.prototype[property] = value;
 		}
@@ -396,85 +399,91 @@ mvc.log=new mvc.cls._log();
  * Controller Definition
  * part_controller.js
  */
-mvc.ext(mvc,"ctl",function(name){
-	var _public={
+mvc.ext(mvc, "ctl", function(name) {
+	var _public = {
 		/**
 		 * Send Message to this controller synchronously.
 		 */
-		sendMSG:function(msg,args){
-			return _private.sendMSG(msg,args);
+		sendMSG : function(msg, args) {
+			return _private.sendMSG(msg, args);
 		},
 		/**
-		 * Post Message to this controller asynchronously. 
+		 * Post Message to this controller asynchronously.
 		 */
-		postMSG:function(msg,args,callback){
-			return _private.postMSG(msg,args,callback);
+		postMSG : function(msg, args, callback) {
+			return _private.postMSG(msg, args, callback);
 		},
 		/**
 		 * Check if specified controller and method exists.
 		 */
-		checkCtl:function(method){
+		checkCtl : function(method) {
 			return _private.checkCtl(method);
 		}
 	};
-	var _props={
-		_ctl:null
+	var _props = {
+		_ctl : null
 	};
-	var _private={
-		checkCtl:function(method){
-			if (!_private.isCtlExisted(name)){
+	var _private = {
+		checkCtl : function(method) {
+			if(!_private.isCtlExisted(name)) {
 				return false;
 			}
-			if (method){
-				if (!mvc.controllers[name][method]){
+			if(method) {
+				if(!mvc.controllers[name][method]) {
 					return false;
 				}
 			}
 			return true;
 		},
-		checkMSG:function(msg){
-			var ctl=_props._ctl;
-			if (ctl[msg]!=undefined){
-				if (typeof ctl[msg] ==="function"){
+		checkMSG : function(msg) {
+			var ctl = _props._ctl;
+			if(ctl[msg] != undefined) {
+				if( typeof ctl[msg] === "function") {
 					return true;
-				}else{
+				} else {
 					mvc.log.i("Detected non-function item assigned to controller.");
 				}
-			}else{
-				mvc.log.i("Refered non-defined message:"+msg);
+			} else {
+				mvc.log.i("Refered non-defined message:" + msg);
 			}
 			return false;
 		},
-		sendMSG:function(msg,args){
-			if (!_private.isCtlExisted(name)){
-				throw("Controller with name:"+name+" Does not exist.");
+		sendMSG : function(msg, args) {
+			if(!_private.isCtlExisted(name)) {
+				throw ("Controller with name:" + name + " Does not exist.");
 			}
-			var ctl=_props._ctl;
-			if (_private.checkMSG(msg)){
-				return ctl[msg].apply(ctl,args);
+			var ctl = _props._ctl;
+			if(_private.checkMSG(msg)) {
+				if(args === undefined || args === null) {
+					args = [];
+				}
+				return ctl[msg].apply(ctl, args);
 			}
 			return;
 		},
-		postMSG:function(msg,args,callback){
-			if (!_private.isCtlExisted(name)){
-				throw("Controller with name:"+name+" Does not exist.");
+		postMSG : function(msg, args, callback) {
+			if(!_private.isCtlExisted(name)) {
+				throw ("Controller with name:" + name + " Does not exist.");
 			}
-			var ctl=_props._ctl;
-			if (_private.checkMSG(msg)){
-				setTimeout(function(){
-					var res=ctl[msg].apply(ctl,args);
-					if (callback!=undefined && typeof callback==="function"){
+			var ctl = _props._ctl;
+			if(_private.checkMSG(msg)) {
+				setTimeout(function() {
+					if(args === undefined || args === null) {
+						args = [];
+					}
+					var res = ctl[msg].apply(ctl, args);
+					if(callback != undefined && typeof callback === "function") {
 						callback(res);
 					}
-				},0)
+				}, 0)
 			}
 			return;
 		},
-		init:function(){
-			_props._ctl=mvc.controllers[name];
+		init : function() {
+			_props._ctl = mvc.controllers[name];
 		},
-		isCtlExisted:function(name){
-			if (mvc.controllers[name]==undefined){
+		isCtlExisted : function(name) {
+			if(mvc.controllers[name] == undefined) {
 				return false;
 			}
 			return true;
@@ -484,16 +493,16 @@ mvc.ext(mvc,"ctl",function(name){
 	return _public;
 });
 
-mvc.ext(mvc,"controllers",{}); //empty controller entry
-mvc.ext(mvc,"regCtl",function(name,controllerObj){
-	if (typeof controllerObj!="object"){
+mvc.ext(mvc, "controllers", {});
+//empty controller entry
+mvc.ext(mvc, "regCtl", function(name, controllerObj) {
+	if( typeof controllerObj != "object") {
 		mvc.log.e("Controller should be a JSON object!");
 		return false;
 	}
-	mvc.ext(mvc.controllers,name,controllerObj);
+	mvc.ext(mvc.controllers, name, controllerObj);
 	return true;
 });
-
 /**
  * Part_event.js
  */
@@ -684,7 +693,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	},
 	reset : function() {
 		this.props.data = {};
-		mvc.util.copyJSON(this.props._data, this.props.data, true);
+		this.props.data=mvc.util.copyJSON(this.props._data, undefined, true);
 	},
 	/**
 	 * adapt filter and sorter to current data
@@ -1298,7 +1307,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		if (this.model){
 			uidata=this.model.getData();
 		}
-		mvc.util.copyJSON(this.uidata,uidata);
+		uidata=mvc.util.copyJSON(this.uidata,uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);
@@ -1557,7 +1566,7 @@ mvc.ext(mvc.html, "parser", new (function() {
 			if(param == undefined || mvc.util.isEmpty(param)) {
 				param = {};
 			}
-			mvc.util.copyJSON(_props._basic, param);
+			param=mvc.util.copyJSON(_props._basic, param);
 			if(__html == undefined) {
 				return "";
 			}

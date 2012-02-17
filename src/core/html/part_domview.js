@@ -89,7 +89,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		if (this.model){
 			uidata=this.model.getData();
 		}
-		mvc.util.copyJSON(this.uidata,uidata);
+		uidata=mvc.util.copyJSON(this.uidata,uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);

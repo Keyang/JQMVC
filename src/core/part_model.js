@@ -40,7 +40,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	},
 	reset : function() {
 		this.props.data = {};
-		mvc.util.copyJSON(this.props._data, this.props.data, true);
+		this.props.data=mvc.util.copyJSON(this.props._data, undefined, true);
 	},
 	/**
 	 * adapt filter and sorter to current data

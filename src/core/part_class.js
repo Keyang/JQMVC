@@ -2,7 +2,6 @@
  * part_class.js
  */
 mvc.ext(mvc, "Class", (function() {
-
 	function isFunction(param) {
 		if( typeof param == "function") {
 			return true;
@@ -37,12 +36,14 @@ mvc.ext(mvc, "Class", (function() {
 		if(isFunction(properties[0])) {
 			parent = properties.shift();
 		}
-
+		
 		function mvclass() {
+			this.props=mvc.util.copyJSON(mvclass.props,undefined,true);
 			this.initialise.apply(this, arguments);
 		}
 
 		apply(mvclass, mvc.Class.Methods);
+		mvclass.props={};
 		mvclass.superclass = parent;
 		mvclass.subclasses = [];
 
@@ -54,12 +55,12 @@ mvc.ext(mvc, "Class", (function() {
 			for (var key in anc){
 				var data=anc[key];
 				if (data===null){
-					data,properties[0][key]=null;
-				}else if (typeof data==="object"){
+					properties[0][key]=null;
+				}else if (typeof data==="object" && key==="props"){
 					if (properties[0][key]===undefined){
 						properties[0][key]={};
 					}
-					mvc.util.copyJSON(data,properties[0][key],false);
+					 properties[0][key]=mvc.util.copyJSON(data,properties[0][key],false);
 				}
 			}
 		}
@@ -96,7 +97,9 @@ mvc.ext(mvc, "Class", (function() {
 				})();
 			}
 			if (typeof value==="object"){
-				
+				if (key==="props"){
+					this.props=value;
+				}
 			}
 			this.prototype[property] = value;
 		}

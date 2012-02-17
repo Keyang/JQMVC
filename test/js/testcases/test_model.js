@@ -52,4 +52,20 @@ describe("model", function() {
 			contact.notifyAll(); 
 		});
 	});
+	
+	it ("can reg multiple models",function(){
+		mvc.modelMgr.regModel({
+			"name":"model1",
+			"data":"mydata"
+		});
+		
+		mvc.modelMgr.regModel({
+			"name":"model2",
+			"data":"mydata"
+		});
+		
+		var model1=mvc.modelMgr.get("model1");
+		expect("object").toEqual(typeof model1);
+		expect("model1").toEqual(model1.props.name);
+	});
 });

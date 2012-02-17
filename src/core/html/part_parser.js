@@ -39,7 +39,7 @@ mvc.ext(mvc.html, "parser", new (function() {
 			if(param == undefined || mvc.util.isEmpty(param)) {
 				param = {};
 			}
-			mvc.util.copyJSON(_props._basic, param);
+			param=mvc.util.copyJSON(_props._basic, param);
 			if(__html == undefined) {
 				return "";
 			}
