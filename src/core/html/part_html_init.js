@@ -23,3 +23,11 @@ $(document).ready(function(){
 	mvc.cfg.check(mvc.opt);
 });
 
+//fix ie console issue
+if ($.browser.msie===true){
+	if (typeof console==="undefined"){
+		console={};
+		console.log=function(str){};
+	}
+}
+
