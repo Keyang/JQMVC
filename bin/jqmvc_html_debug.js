@@ -1235,19 +1235,19 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
-		$super(name,mvc.html.domViewMgr);
+		$super(name, mvc.html.domViewMgr);
 	},
-	update:function(model){
-		var data=this.fire("beforeUpdate",this.model.getData(),undefined,false);
-		if (!data){
-			data=this.model.getData();
+	update : function(model) {
+		var data = this.fire("beforeUpdate", this.model.getData(), undefined, false);
+		if(!data) {
+			data = this.model.getData();
 		}
-		this.uidata=data;
+		this.uidata = data;
 		this.loadDom(true);
-		var currentView=mvc.html.domViewMgr.get();
-		if (currentView){
-			var currentViewName=mvc.html.domViewMgr.get().getName();
-			if (currentViewName===this.getName()){
+		var currentView = mvc.html.domViewMgr.get();
+		if(currentView) {
+			var currentViewName = mvc.html.domViewMgr.get().getName();
+			if(currentViewName === this.getName()) {
 				this.display();
 			}
 		}
@@ -1264,7 +1264,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	 * Display this view.
 	 * @param forward Is page go forward or backward.
 	 */
-	display : function($super,forward) {
+	display : function($super, forward) {
 		var obj = this.$();
 		if(obj.length == 0) {
 			this.loadDom(true);
@@ -1311,11 +1311,11 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		// if(!_props.isUIdataLoaded) {
 		// _props.uidata = mvc.html.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
-		var uidata={};
-		if (this.model){
-			uidata=this.model.getData();
+		var uidata = {};
+		if(this.model) {
+			uidata = this.model.getData();
 		}
-		uidata=mvc.util.copyJSON(this.uidata,uidata);
+		uidata = mvc.util.copyJSON(this.uidata, uidata);
 		var params = uidata;
 		this.loadStatus = "loading";
 		pageHtml = this.fire("beforeParse", pageHtml, undefined, false);
@@ -1345,8 +1345,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		if(this.loadStatus === "loaded") {
 			if(mvc.$("#" + this.getName()).length === 0 || isReload === true) {
-				if (isReload){
-					this.removeDom(); //may conflict with some UI libraries
+				if(isReload) {
+					this.removeDom();
+					//may conflict with some UI libraries
 				}
 				mvc.$().append(this.op_buf);
 				this.fire("domReady", this.$(), undefined, false);
@@ -1381,15 +1382,25 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	/**
 	 * set dom events to view
 	 */
-	setDomEvent : function(domEvent) {
+	setDomEvent : function() {
 		var that = this;
+		var args = arguments;
 		function bindEvent() {
-			for(var selector in domEvent) {
-				for(var evnt in domEvent[selector]) {
-					that.$(selector).unbind(evnt);
-					that.$(selector).bind(evnt, domEvent[selector][evnt]);
+			var domEvent=null;
+			if(arguments.length === 0) {
+				return;
+			} else {
+				for(var i = 0; i < arguments.length; i++) {
+					domEvent = arguments[i];
+				}
+				for(var selector in domEvent) {
+					for(var evnt in domEvent[selector]) {
+						that.$(selector).unbind(evnt);
+						that.$(selector).bind(evnt, domEvent[selector][evnt]);
+					}
 				}
 			}
+
 		}
 
 		if(this.$().length === 0) {
@@ -1401,25 +1412,25 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 			bindEvent();
 		}
 	},
-	setUIData:function(data){
-		this.uidata=data;
+	setUIData : function(data) {
+		this.uidata = data;
 	}
 }));
 
-mvc.cfg.addItem("html.domview",function(opt){
-	if (opt.interfaces==undefined){
+mvc.cfg.addItem("html.domview", function(opt) {
+	if(opt.interfaces == undefined) {
 		mvc.cfg.err("interfaces");
 		return false;
 	}
-	if (opt.interfaces.goBackPage==undefined){
+	if(opt.interfaces.goBackPage == undefined) {
 		mvc.cfg.err("interfaces.goBackPage");
 		return false;
 	}
-	if (opt.interfaces.goForwPage==undefined){
+	if(opt.interfaces.goForwPage == undefined) {
 		mvc.cfg.err("interfaces.goForwPage");
 		return false;
 	}
-	if (opt.pagePath==undefined){
+	if(opt.pagePath == undefined) {
 		mvc.cfg.err("pagePath");
 		return false;
 	}
