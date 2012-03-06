@@ -53,7 +53,7 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer, {
 		return this.events.fire(eventType, res, key, async);
 	},
 	getName : function() {
-		return this.name;
+		return this.name; 
 	},
 	/**
 	 * remove this view
