@@ -25,7 +25,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 			return _private.fire(eventType, param, key, async, scope);
 		},
 		/**
-		 * It will unbind itself if it has been fired.
+		 * It will unbind itself once it is fired.
 		 * @param eventType event type that will be bound.
 		 * @param key identifier of the handler.
 		 * @param func handler.

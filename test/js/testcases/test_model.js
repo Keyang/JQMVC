@@ -68,4 +68,61 @@ describe("model", function() {
 		expect("object").toEqual(typeof model1);
 		expect("model1").toEqual(model1.props.name);
 	});
+	
+	it ("can assign data directly",function(){
+		var m =mvc.modelMgr.regModel({
+			"name":"model1",
+			"proxy":new mvc.proxy.simpleData({
+				"data":"value",
+				"value":"hello"
+			})
+			
+		});
+		m.load({},function(err,data){
+			expect("value").toEqual(data.data);
+			expect("hello").toEqual(data.value);
+		});
+		
+	});
+});
+
+describe ("model data default process",function(){
+	
+	it ("can filter data with conditions",function(){
+		var m=mvc.modelMgr.regModel({
+			"name":"arryModel",
+			"proxy":new mvc.proxy.simpleData([
+				1,2,3,4,5,6,7	
+			]),
+			"filter":function(item){
+				if (item>5){
+					return false;
+				}
+			}
+		});
+		m.load({},function(err,data){
+			var dataStr=data.join("");
+			expect("12345").toEqual(dataStr);
+		});
+	});
+	
+	it ("can sort data with conditions",function(){
+		var m=mvc.modelMgr.regModel({
+			"name":"arryModel",
+			"proxy":new mvc.proxy.simpleData([
+				1,2,3,4,5,6,7	
+			]),
+			"sorter":function(a,b){
+				if (a>b){
+					return -1;
+				}else{
+					return 1;
+				}
+			}
+		});
+		m.load({},function(err,data){
+			var dataStr=data.join("");
+			expect("7654321").toEqual(dataStr);
+		});
+	});
 });

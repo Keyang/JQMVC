@@ -8,13 +8,10 @@
 	var obj = parent[nameSpace];
 	obj.ext = function(parent, key, tarObj) {
 		if( typeof parent != "object") {
-				throw("mvc.ext first param should be entry object.");
+			throw ("mvc.ext first param should be entry object.");
 		}
 		if( typeof key != "string") {
 			throw ("mvc.ext second param should be key as string.");
-		}
-		if(parent[key] != undefined) {
-			mvc.log.i("Overwritten extention detected.");
 		}
 		parent[key] = tarObj;
 	}
@@ -35,30 +32,34 @@ mvc.ext(mvc, "util", {
 		}
 	},
 	/**
-	 * deeply Copy jsonObj to toJson object
+	 * deeply Copy jsonObj
+	 * @toJson omit it.
 	 * final json object will be returned
 	 */
 	copyJSON : function(jsonObj, toJson, override) {
+		if (typeof jsonObj!="object" || jsonObj===null){
+			return jsonObj;
+		}
 		var tmpObj = {};
+		//fix for old version 
 		if(toJson != undefined) {
-			tmpObj = mvc.util.copyJSON(toJson,undefined,true);
+			tmpObj = mvc.util.copyJSON(toJson, undefined, true);
 		}
 		//deep clone for setting json obj
 		var tmpOri = jsonObj;
-		for(var key in tmpOri) {
-			if(override === false) {
-				if(tmpObj[key] != undefined) {
-					continue;
-				}
+		if( tmpOri instanceof Array) {
+			tmpObj=[];
+			for (var i=0;i<tmpOri.length;i++){
+				tmpObj.push(mvc.util.copyJSON(tmpOri[i]));
 			}
-			if(!mvc.util.isEmpty(tmpOri[key])) {
-				if(tmpOri[key].constructor == Object) {
-					tmpObj[key] = mvc.util.copyJSON(tmpOri[key]);
-				} else {
-					tmpObj[key] = tmpOri[key];
+		} else {
+			for(var key in tmpOri) {
+				if(override === false) {
+					if(tmpObj[key] != undefined) {
+						continue;
+					}
 				}
-			} else {
-				tmpObj[key] = tmpOri[key];
+				tmpObj[key]=mvc.util.copyJSON(tmpOri[key]);
 			}
 		}
 		return tmpObj;
@@ -70,4 +71,3 @@ mvc.ext(mvc, "util", {
 		return val == undefined || val === "" || val === null || val === {};
 	}
 });
-

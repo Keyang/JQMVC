@@ -9,4 +9,7 @@ The power of JQMVC is it keeps same code style for different Javascript platform
 The core of JQMVC is highly abstracted standard MVC pattern.  
 Besides, it allows developers to add self-defined plugins to support more view typs and proxies types.
 
-## 
+## Start Tutorial
+
+### Hello World 
+

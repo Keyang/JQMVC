@@ -27,13 +27,13 @@ mvc.ext(mvc.proxy, "ajax", mvc.Class.create(mvc.cls.proxy, {
 			dataType : this.props.dataType,
 			success : function(res) {
 				if (callback){
-					callback(res);
+					callback(null,res);
 				}
 			},
 			error : function(xhr, text, err) {
 				mvc.log.e(text, "asyncLoad", that.props.url);
 				if (callback){
-					callback(res);
+					callback(text,{});
 				}
 			}
 		};
@@ -44,12 +44,13 @@ mvc.ext(mvc.proxy, "ajax", mvc.Class.create(mvc.cls.proxy, {
 		}
 		$.ajax(param);
 	},
-	initialise:function(url,dataType){
+	initialise:function($super,url,dataType){
 		if (url==undefined){
 			throw("Ajax proxy needs url as param of constructor.");
 		}
 		this.props.url=url;
 		this.props.cfg_ajax=mvc.opt.ajax;
 		this.props.dataType=dataType;
+		$super();
 	}
 }));

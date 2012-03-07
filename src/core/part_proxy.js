@@ -1,29 +1,27 @@
 /**
  * Model Proxy
  * part_proxy.js
- * 
+ *
  */
 
-mvc.ext(mvc.cls,"proxy",mvc.Class.create(mvc.cls.observer,{
-	load:function(callback){
-		throw("load method is not implemented");
+mvc.ext(mvc.cls, "proxy", mvc.Class.create(mvc.cls.observer, {
+	events : null,
+	initialise : function() {
+		this.events = new mvc.cls["event"](this);
 	},
-	save:function(res,callback){
-		throw("save method is not implemented");
-	},
-	exec:function(cmd,params,callback){
-		if (this[cmd]===undefined){
-			throw("command:"+cmd+" is not implemented in proxy.");
+	exec : function(cmd, params, callback) {
+		var that = this;
+		if(this[cmd] === undefined) {
+			throw ("command:" + cmd + " is not implemented in proxy.");
 		}
-		params.push(callback);
-		return this[cmd].apply(this,params);
+		that.events.fire("before" + cmd);
+		this[cmd](params,function(err,response) {
+			if (!err){
+				var res = that.events.fire("after" + cmd, response);
+			}
+			callback(err, res);
+		});
 	}
 }));
 
-mvc.ext(mvc,"proxy",{});
-
-mvc.ext(mvc,"regProxy",function(){
-	
-});
-
-
+mvc.ext(mvc, "proxy", {});

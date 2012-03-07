@@ -9,8 +9,10 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		sorter : null,
 		filter : null,
 		proxy : null,
-		_data : null
+		_data : null,
+		autoNotify : false
 	},
+	events : null,
 	subscribe : function($super, view) {
 		var name = view.getName();
 		$super(name, view);
@@ -19,19 +21,23 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		if(!opt.name) {
 			throw ("Model name should be specified");
 		}
+		this.events = new mvc.cls["event"](this);
 		for(var key in opt) {
+			if(key === "data") {
+				this.props["_data"] = opt[key];
+				continue;
+			}
 			this.props[key] = opt[key];
 		}
-	},
-	setData : function(data) {
-		this.props.events
-		this.props.data = data;
+		if(this.props["_data"]) {
+			this.reset();
+			this.arrangeData();
+		}
 	},
 	setFilter : function(filter) {
 		this.props.filter = filter;
 		this.reset();
 		this.arrangeData();
-
 	},
 	setSorter : function(sorter) {
 		this.props.sorter = sorter;
@@ -40,7 +46,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	},
 	reset : function() {
 		this.props.data = {};
-		this.props.data=mvc.util.copyJSON(this.props._data, undefined, true);
+		this.props.data = mvc.util.copyJSON(this.props._data, undefined, true);
 	},
 	/**
 	 * adapt filter and sorter to current data
@@ -51,32 +57,33 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 		if(this.props.data instanceof Array) {
 			if(this.props.filter) {
+				var tmpData=[];
 				for(var i = 0; i < this.props.data.length; i++) {
 					var data = this.props.data[i];
 					var res = this.props.filter(data);
-					if(res === false) {
-						this.props.data.splice(i, 1);
+					if(res != false) {
+						tmpData.push(data);
 					}
 				}
+				this.props.data=tmpData;
 			}
 			if(this.props.sorter) {
-				//TODO sorter algorithm
+				this.props.data = this.props.data.sort(this.props.sorter);
 			}
-
 		}
 	},
 	/**
 	 * load data to 'local'
 	 */
-	load : function(params,callback) {
+	load : function(params, callback) {
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.load(params,function(data) {
+			this.exec("load", params, function(err, data) {
 				that.props._data = data;
 				that.reset();
 				that.arrangeData();
 				if(callback) {
-					callback(data);
+					callback(err,that.getData());
 				}
 			});
 		} else {
@@ -86,12 +93,15 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	/**
 	 * save data to 'remote'
 	 */
-	save : function(params,callback) {
+	save : function(data, callback) {
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.save(this.props.data, params,function(res) {
+			this.exec("save", data, function(err, res) {
+				that.props._data = res;
+				that.reset();
+				that.arrangeData();
 				if(callback) {
-					callback(res);
+					callback(err,that.getData());
 				}
 			});
 		} else {
@@ -99,22 +109,22 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 	},
 	exec : function(cmd, params, callback) {
+		var that = this;
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.exec(cmd, params, function(res) {
-				if(callback) {
-					callback(res);
+			that.events.fire("before" + cmd);
+			this.props.proxy.exec(cmd, params, function(err, res) {
+				if(!err) {
+					res = that.events.fire("after" + cmd, res);
+				}
+				callback(err,res);
+				if(that.props.autoNotify === true) {
+					that.notifyAll();
 				}
 			});
 		} else {
 			mvc.log.e("Proxy is not setup in model:" + this.props.name);
 		}
-	},
-	/**
-	 * set local data
-	 */
-	setData : function(data) {
-		this.props.data = data;
 	},
 	/**
 	 * return local cached data;
@@ -123,7 +133,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		return this.props.data;
 	},
 	/**
-	 * return raw data from remote
+	 * return raw data from proxy
 	 */
 	getRawData : function() {
 		return this.props._data;
@@ -138,7 +148,7 @@ mvc.ext(mvc, "modelMgr", {
 		mvc.ext(mvc.models, opt.name, new mvc.cls.model(opt));
 		return mvc.models[opt.name];
 	},
-	get:function(name){
+	get : function(name) {
 		return mvc.models[name];
 	}
 });

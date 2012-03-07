@@ -65,13 +65,10 @@ _app_={
 	var obj = parent[nameSpace];
 	obj.ext = function(parent, key, tarObj) {
 		if( typeof parent != "object") {
-				throw("mvc.ext first param should be entry object.");
+			throw ("mvc.ext first param should be entry object.");
 		}
 		if( typeof key != "string") {
 			throw ("mvc.ext second param should be key as string.");
-		}
-		if(parent[key] != undefined) {
-			mvc.log.i("Overwritten extention detected.");
 		}
 		parent[key] = tarObj;
 	}
@@ -92,30 +89,34 @@ mvc.ext(mvc, "util", {
 		}
 	},
 	/**
-	 * deeply Copy jsonObj to toJson object
+	 * deeply Copy jsonObj
+	 * @toJson omit it.
 	 * final json object will be returned
 	 */
 	copyJSON : function(jsonObj, toJson, override) {
+		if (typeof jsonObj!="object" || jsonObj===null){
+			return jsonObj;
+		}
 		var tmpObj = {};
+		//fix for old version 
 		if(toJson != undefined) {
-			tmpObj = mvc.util.copyJSON(toJson,undefined,true);
+			tmpObj = mvc.util.copyJSON(toJson, undefined, true);
 		}
 		//deep clone for setting json obj
 		var tmpOri = jsonObj;
-		for(var key in tmpOri) {
-			if(override === false) {
-				if(tmpObj[key] != undefined) {
-					continue;
-				}
+		if( tmpOri instanceof Array) {
+			tmpObj=[];
+			for (var i=0;i<tmpOri.length;i++){
+				tmpObj.push(mvc.util.copyJSON(tmpOri[i]));
 			}
-			if(!mvc.util.isEmpty(tmpOri[key])) {
-				if(tmpOri[key].constructor == Object) {
-					tmpObj[key] = mvc.util.copyJSON(tmpOri[key]);
-				} else {
-					tmpObj[key] = tmpOri[key];
+		} else {
+			for(var key in tmpOri) {
+				if(override === false) {
+					if(tmpObj[key] != undefined) {
+						continue;
+					}
 				}
-			} else {
-				tmpObj[key] = tmpOri[key];
+				tmpObj[key]=mvc.util.copyJSON(tmpOri[key]);
 			}
 		}
 		return tmpObj;
@@ -127,7 +128,6 @@ mvc.ext(mvc, "util", {
 		return val == undefined || val === "" || val === null || val === {};
 	}
 });
-
 /**
  * part_class.js
  */
@@ -530,7 +530,7 @@ mvc.ext(mvc.cls, "event", function(that) {
 			return _private.fire(eventType, param, key, async, scope);
 		},
 		/**
-		 * It will unbind itself if it has been fired.
+		 * It will unbind itself once it is fired.
 		 * @param eventType event type that will be bound.
 		 * @param key identifier of the handler.
 		 * @param func handler.
@@ -662,8 +662,10 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		sorter : null,
 		filter : null,
 		proxy : null,
-		_data : null
+		_data : null,
+		autoNotify : false
 	},
+	events : null,
 	subscribe : function($super, view) {
 		var name = view.getName();
 		$super(name, view);
@@ -672,19 +674,23 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		if(!opt.name) {
 			throw ("Model name should be specified");
 		}
+		this.events = new mvc.cls["event"](this);
 		for(var key in opt) {
+			if(key === "data") {
+				this.props["_data"] = opt[key];
+				continue;
+			}
 			this.props[key] = opt[key];
 		}
-	},
-	setData : function(data) {
-		this.props.events
-		this.props.data = data;
+		if(this.props["_data"]) {
+			this.reset();
+			this.arrangeData();
+		}
 	},
 	setFilter : function(filter) {
 		this.props.filter = filter;
 		this.reset();
 		this.arrangeData();
-
 	},
 	setSorter : function(sorter) {
 		this.props.sorter = sorter;
@@ -693,7 +699,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	},
 	reset : function() {
 		this.props.data = {};
-		this.props.data=mvc.util.copyJSON(this.props._data, undefined, true);
+		this.props.data = mvc.util.copyJSON(this.props._data, undefined, true);
 	},
 	/**
 	 * adapt filter and sorter to current data
@@ -704,32 +710,33 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 		if(this.props.data instanceof Array) {
 			if(this.props.filter) {
+				var tmpData=[];
 				for(var i = 0; i < this.props.data.length; i++) {
 					var data = this.props.data[i];
 					var res = this.props.filter(data);
-					if(res === false) {
-						this.props.data.splice(i, 1);
+					if(res != false) {
+						tmpData.push(data);
 					}
 				}
+				this.props.data=tmpData;
 			}
 			if(this.props.sorter) {
-				//TODO sorter algorithm
+				this.props.data = this.props.data.sort(this.props.sorter);
 			}
-
 		}
 	},
 	/**
 	 * load data to 'local'
 	 */
-	load : function(params,callback) {
+	load : function(params, callback) {
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.load(params,function(data) {
+			this.exec("load", params, function(err, data) {
 				that.props._data = data;
 				that.reset();
 				that.arrangeData();
 				if(callback) {
-					callback(data);
+					callback(err,that.getData());
 				}
 			});
 		} else {
@@ -739,12 +746,15 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 	/**
 	 * save data to 'remote'
 	 */
-	save : function(params,callback) {
+	save : function(data, callback) {
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.save(this.props.data, params,function(res) {
+			this.exec("save", data, function(err, res) {
+				that.props._data = res;
+				that.reset();
+				that.arrangeData();
 				if(callback) {
-					callback(res);
+					callback(err,that.getData());
 				}
 			});
 		} else {
@@ -752,22 +762,22 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 	},
 	exec : function(cmd, params, callback) {
+		var that = this;
 		if(this.props.proxy) {
 			var that = this;
-			this.props.proxy.exec(cmd, params, function(res) {
-				if(callback) {
-					callback(res);
+			that.events.fire("before" + cmd);
+			this.props.proxy.exec(cmd, params, function(err, res) {
+				if(!err) {
+					res = that.events.fire("after" + cmd, res);
+				}
+				callback(err,res);
+				if(that.props.autoNotify === true) {
+					that.notifyAll();
 				}
 			});
 		} else {
 			mvc.log.e("Proxy is not setup in model:" + this.props.name);
 		}
-	},
-	/**
-	 * set local data
-	 */
-	setData : function(data) {
-		this.props.data = data;
 	},
 	/**
 	 * return local cached data;
@@ -776,7 +786,7 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		return this.props.data;
 	},
 	/**
-	 * return raw data from remote
+	 * return raw data from proxy
 	 */
 	getRawData : function() {
 		return this.props._data;
@@ -791,39 +801,62 @@ mvc.ext(mvc, "modelMgr", {
 		mvc.ext(mvc.models, opt.name, new mvc.cls.model(opt));
 		return mvc.models[opt.name];
 	},
-	get:function(name){
+	get : function(name) {
 		return mvc.models[name];
 	}
 });
 /**
  * Model Proxy
  * part_proxy.js
- * 
+ *
  */
 
-mvc.ext(mvc.cls,"proxy",mvc.Class.create(mvc.cls.observer,{
-	load:function(callback){
-		throw("load method is not implemented");
+mvc.ext(mvc.cls, "proxy", mvc.Class.create(mvc.cls.observer, {
+	events : null,
+	initialise : function() {
+		this.events = new mvc.cls["event"](this);
 	},
-	save:function(res,callback){
-		throw("save method is not implemented");
-	},
-	exec:function(cmd,params,callback){
-		if (this[cmd]===undefined){
-			throw("command:"+cmd+" is not implemented in proxy.");
+	exec : function(cmd, params, callback) {
+		var that = this;
+		if(this[cmd] === undefined) {
+			throw ("command:" + cmd + " is not implemented in proxy.");
 		}
-		params.push(callback);
-		return this[cmd].apply(this,params);
+		that.events.fire("before" + cmd);
+		this[cmd](params,function(err,response) {
+			if (!err){
+				var res = that.events.fire("after" + cmd, response);
+			}
+			callback(err, res);
+		});
 	}
 }));
 
-mvc.ext(mvc,"proxy",{});
+mvc.ext(mvc, "proxy", {});
+/**
+ * Simple Data Proxy. Contain data instance.
+ * ./part_simpleData.js
+ */
 
-mvc.ext(mvc,"regProxy",function(){
-	
-});
-
-
+mvc.ext(mvc.proxy,"simpleData",mvc.Class.create(mvc.cls.proxy,{
+	props:{
+		data:null
+	},
+	initialise:function($super,data){
+		this.props.data=data;
+		$super();
+	},
+	load:function(param,callback){
+		if (callback){
+			callback(null,this.props.data);
+		}
+	},
+	save:function(data,callback){
+		this.props.data=data;
+		if (callback){
+			callback(null,this.props.data);
+		}
+	}
+}));
 mvc.ext(mvc,"string",{
 	error:{
 		view:{
@@ -963,7 +996,7 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer, {
 		return this.events.fire(eventType, res, key, async);
 	},
 	getName : function() {
-		return this.name;
+		return this.name; 
 	},
 	/**
 	 * remove this view
@@ -1793,13 +1826,13 @@ mvc.ext(mvc.proxy, "ajax", mvc.Class.create(mvc.cls.proxy, {
 			dataType : this.props.dataType,
 			success : function(res) {
 				if (callback){
-					callback(res);
+					callback(null,res);
 				}
 			},
 			error : function(xhr, text, err) {
 				mvc.log.e(text, "asyncLoad", that.props.url);
 				if (callback){
-					callback(res);
+					callback(text,{});
 				}
 			}
 		};
@@ -1810,12 +1843,13 @@ mvc.ext(mvc.proxy, "ajax", mvc.Class.create(mvc.cls.proxy, {
 		}
 		$.ajax(param);
 	},
-	initialise:function(url,dataType){
+	initialise:function($super,url,dataType){
 		if (url==undefined){
 			throw("Ajax proxy needs url as param of constructor.");
 		}
 		this.props.url=url;
 		this.props.cfg_ajax=mvc.opt.ajax;
 		this.props.dataType=dataType;
+		$super();
 	}
 }));
