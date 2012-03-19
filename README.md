@@ -4,6 +4,8 @@ Another pretty and neat opensource MVC framework for Javascript!
 
 ## Introduction
 
+![JQMVC](https://github.com/Keyang/JQMVC/wiki/images/MVC.png)
+
 JQMVC is a highly extendible MVC framework for Javascript based environment. 
 The power of JQMVC is it keeps same code style for different Javascript environment such as Browsers, Node.js etc. 
 The core of JQMVC is highly abstracted standard MVC pattern.  
