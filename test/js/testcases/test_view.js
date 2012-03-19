@@ -19,7 +19,7 @@ function test_view() {
 				}
 			})
 		}
-
+	
 		it("can bind global event", function() {
 
 			//Bound function will be executed each view triggers "display" event
@@ -165,6 +165,9 @@ function test_view() {
 					}
 				}
 			})
+		});
+		it ("can use shortcut to access get method",function(){
+			mvc.view("home").show();
 		})
 	});
 	describe("element", function() {

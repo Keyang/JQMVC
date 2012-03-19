@@ -1593,7 +1593,9 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 mvc.app.ready(function(){
 	mvc.html.viewMgr=new mvc.html._domViewMgr();
 	mvc.viewMgr=mvc.html.viewMgr;// create a shortcut for html view manager.
-	mvc.view=mvc.viewMgr.get; //shortcut for most commonly used method.
+	mvc.view=function(){   //shortcut for most commonly used method.
+		return mvc.viewMgr.get.apply(mvc.viewMgr,arguments);
+	}
 });
 /**
  * Parser of <?mvc code ?>.
