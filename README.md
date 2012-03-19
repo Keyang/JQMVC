@@ -29,4 +29,7 @@ This is a small set of conventions and classes that make writing maintainable ap
 
 Basically, it is recommended to initiate your app with following structure:
 
- 
+![Project Structure](./wiki/images/projectstructure.png)
+
+
+
