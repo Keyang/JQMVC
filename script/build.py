@@ -131,7 +131,7 @@ def redefinevars():
   INDEX_DEV_FILE = "/index-{0}.html".format(tar_pack);
   MERGED_FILE = "jqmvc_{0}_debug".format(tar_pack);
   MINIFIED_FILE = "jqmvc_{0}.min".format(tar_pack);
-  cfg_file = PATH_PREFIX + "/core/" + tar_pack + "/default_cfg.js";
+  cfg_file = PATH_PREFIX + "/license";
       
 def mergeCfgFile():
     global cfg_file;
@@ -144,7 +144,7 @@ def mergeCfgFile():
     else:
         mergedFilePath = EXPORTED_PATH + "/" + MERGED_FILE + ".js";
         minifiedFilePath= EXPORTED_PATH + "/" + MINIFIED_FILE + ".js";
-        print ("Start to merge config file:"+cfg_file);
+        print ("Start to merge license file:"+cfg_file);
         cfgfile=open(cfg_file,'r');
         cfgContent=cfgfile.read();
         if not os.path.exists(mergedFilePath):
@@ -191,7 +191,7 @@ def main():
   redefinevars();
   print ("Start to build folder:" + PATH_PREFIX);
   readIndexFile();
-  #mergeCfgFile();
+  mergeCfgFile();
   
   
 if __name__ == '__main__':

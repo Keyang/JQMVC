@@ -1,3 +1,11 @@
+/*
+* JQMVC framework
+* https://github.com/Keyang/JQMVC
+*
+* Copyright 2011-2012, Keyang Xiang
+* Licensed under the MIT
+*/
+
 /**
  * part_basic.js
  */
@@ -780,6 +788,10 @@ mvc.ext(mvc, "modelMgr", {
 	get : function(name) {
 		return mvc.models[name];
 	}
+});
+
+mvc.app.ready(function(){
+	mvc.regModel=mvc.modelMgr.regModel; //shortcuts.
 });
 /**
  * Model Proxy

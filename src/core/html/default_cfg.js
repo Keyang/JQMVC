@@ -1,10 +1,3 @@
-/*
-* JQMVC framework
-* https://github.com/Keyang/JQMVC
-*
-* Copyright 2011-2012, Keyang Xiang
-* Licensed under the MIT
-*/
 
 /**
  *	Configurations
