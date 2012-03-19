@@ -16,7 +16,7 @@
 		parent[key] = tarObj;
 	}
 	obj.opt = opt;
-})(window, _app_);
+})(window, {});
 mvc.ext(mvc, "cls", {});
 mvc.ext(mvc, "util", {
 	text : {
@@ -32,8 +32,8 @@ mvc.ext(mvc, "util", {
 		}
 	},
 	/**
-	 * deeply Copy jsonObj
-	 * @toJson omit it.
+	 * deeply merge two jsonObj and return a new copy (not a reference)
+	 * 
 	 * final json object will be returned
 	 */
 	copyJSON : function(jsonObj, toJson, override) {

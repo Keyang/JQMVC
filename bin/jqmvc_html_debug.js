@@ -1,60 +1,3 @@
-/*
- * JQMVC framework
- * https://github.com/Keyang/JQMVC
- *
- * Copyright 2011-2012, Keyang Xiang
- * Licensed under the MIT
- */
-
-/**
- *	Configurations
- */
-
-_app_={ 
-  ajax:{}, //ajax configurations. checkout jqueyr ajax parameter.
-  appContainer:"#pages", //the element in which the app will be rendered. it could be any jquery selector. 
-  elementPath:"app/elements", //the absolute path of element folder
-  pagePath:"app/views", // the absolute path of page folder
-  onStart:{ //default user action once user opens the app.
-  	controller:"nav",
-  	method:"home"
-  },
-  interfaces:{ //User-defined implementation according to their descriptions. They are affected by UI library chosen.
-    /**
-     * This is invoked when viewer finished initilising loading page and ask UI to render page
-     * Change to next page. Generally it is manipulated by UI library currently using.
-     * @param pageID: id of Page to be loaded.
-     */
-    goForwPage: function(pageID) {
-      var jQueryObj=$("#"+pageID);
-      var curPage=$(".currentPage");
-      if (curPage.length>0) {
-        curPage.removeClass("currentPage");
-      }
-      jQueryObj.addClass("currentPage");
-    },
-    /**
-     * This is invoked when framework receives a "back" action. e.g. If you have different animation for goFowardPage and goBackPage, you should set up them differently.
-     */
-    goBackPage: function(pageID) {
-      _app_.interfaces.goForwPage(pageID);
-    },
-    /**
-     * return jQuery Object of current page
-     */
-    currentPage: function() {
-      return $(".currentPage");
-    },
-    /**
-     * called when page is updated.
-     */
-    updatePage:function(pageID){
-    	
-    }
-  }
-};
-
-
 /**
  * part_basic.js
  */
@@ -73,7 +16,7 @@ _app_={
 		parent[key] = tarObj;
 	}
 	obj.opt = opt;
-})(window, _app_);
+})(window, {});
 mvc.ext(mvc, "cls", {});
 mvc.ext(mvc, "util", {
 	text : {
@@ -89,8 +32,8 @@ mvc.ext(mvc, "util", {
 		}
 	},
 	/**
-	 * deeply Copy jsonObj
-	 * @toJson omit it.
+	 * deeply merge two jsonObj and return a new copy (not a reference)
+	 * 
 	 * final json object will be returned
 	 */
 	copyJSON : function(jsonObj, toJson, override) {
@@ -244,6 +187,33 @@ mvc.ext(mvc, "Class", (function() {
 		}
 	};
 })());
+/**
+ * Applicatinon Definition
+ * ./part_app.js
+ */
+
+mvc.ext(mvc, "app", {
+	props:{
+		readyFuncs:[]
+	},
+	init : function(opt) {
+		mvc.opt = mvc.util.copyJSON(opt, mvc.opt, true);
+		if (mvc.opt.ready!=undefined){
+			for (var i=0;i<this.props.readyFuncs.length;i++){
+				var func=this.props.readyFuncs[i];
+				mvc.opt.ready(func);
+			}
+		}else{
+			for (var i=0;i<this.props.readyFuncs.length;i++){
+				var func=this.props.readyFuncs[i];
+				func();
+			}
+		}
+	},
+	ready:function(func){
+		this.props.readyFuncs.push(func);
+	}
+});
 /**
  * Abstract config class
  * ./part_cfg.js
@@ -688,11 +658,17 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 	},
 	setFilter : function(filter) {
+		if (filter==undefined || filter==null){
+			filter=null;
+		}
 		this.props.filter = filter;
 		this.reset();
 		this.arrangeData();
 	},
 	setSorter : function(sorter) {
+		if (sorter==undefined || sorter==null){
+			sorter=null;
+		}
 		this.props.sorter = sorter;
 		this.reset();
 		this.arrangeData();
@@ -1135,7 +1111,7 @@ mvc.cfg.addItem("html_init",function(opt){
 });
 
 
-$(document).ready(function(){
+mvc.app.ready(function(){
 	mvc.cfg.check(mvc.opt);
 });
 
@@ -1146,12 +1122,49 @@ if ($.browser.msie===true){
 		console.log=function(str){};
 	}
 }
-
+//default init
+mvc.app.init({
+	ajax : {}, //ajax configurations. checkout jqueyr ajax parameter.
+	appContainer : "#pages", //the element in which the app will be rendered. it could be any jquery selector.
+	elementPath : "app/elements", //the absolute path of element folder
+	viewPath : "app/views", // the absolute path of page folder
+	onStart : {//default user action once user opens the app.
+		controller : "nav",
+		method : "home"
+	},
+	/**
+	 * This is invoked when viewer finished initilising loading page and ask UI to render page
+	 * Change to next page. Generally it is manipulated by UI library currently using.
+	 * @param pageID: id of Page to be loaded.
+	 */
+	showNextPage : function(pageID) {
+		var jQueryObj = $("#" + pageID);
+		var curPage = $(".currentPage");
+		if(curPage.length > 0) {
+			curPage.removeClass("currentPage");
+		}
+		jQueryObj.addClass("currentPage");
+	},
+	/**
+	 * This is invoked when framework receives a "back" action. e.g. If you have different animation for goFowardPage and goBackPage, you should set up them differently.
+	 */
+	showLastPage : function(pageID) {
+		var jQueryObj = $("#" + pageID);
+		var curPage = $(".currentPage");
+		if(curPage.length > 0) {
+			curPage.removeClass("currentPage");
+		}
+		jQueryObj.addClass("currentPage");
+	},
+	ready:function(func){
+		$(document).ready(func);
+	}
+});
 /**
  * ./html/part_ajax.js
  */
 
-mvc.ext(mvc.html, "ajax", new (function() {
+mvc.ext(mvc.cls, "dom_ajax", function() {
 	var _props = {
 		cachedHtml : {},
 		cfg_ajax:null
@@ -1256,7 +1269,12 @@ mvc.ext(mvc.html, "ajax", new (function() {
 		asyncLoad : _private.asyncLoad
 	};
 	return _public;
-})());
+});
+
+
+mvc.app.ready(function(){
+	mvc.ext(mvc.html,"ajax",new mvc.cls.dom_ajax());
+});
 /**
  *  view class based on jQuery
  * Events registered:  beforeLoad, beforeParse,afterParse, loaded, domReady, displayed
@@ -1304,9 +1322,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		try {
 			if(forward === true) {
-				func = mvc.opt.interfaces.goBackPage;
+				func = mvc.opt.showNextPage;
 			} else {
-				func = mvc.opt.interfaces.goForwPage;
+				func = mvc.opt.showLastPage;
 			}
 			func(this.getName());
 			return $super();
@@ -1332,7 +1350,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		var path = "";
 		if(this.htmlPagePath == null) {
-			path = mvc.opt.pagePath + "/" + this.getName() + ".html";
+			path = mvc.opt.viewPath + "/" + this.getName() + ".html";
 		} else {
 			path = this.htmlPagePath;
 		}
@@ -1451,20 +1469,16 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 }));
 
 mvc.cfg.addItem("html.domview", function(opt) {
-	if(opt.interfaces == undefined) {
-		mvc.cfg.err("interfaces");
+	if(opt.showNextPage == undefined) {
+		mvc.cfg.err("showNextPage");
 		return false;
 	}
-	if(opt.interfaces.goBackPage == undefined) {
-		mvc.cfg.err("interfaces.goBackPage");
+	if(opt.showLastPage == undefined) {
+		mvc.cfg.err("showLastPage");
 		return false;
 	}
-	if(opt.interfaces.goForwPage == undefined) {
-		mvc.cfg.err("interfaces.goForwPage");
-		return false;
-	}
-	if(opt.pagePath == undefined) {
-		mvc.cfg.err("pagePath");
+	if(opt.viewPath == undefined) {
+		mvc.cfg.err("viewPath");
 		return false;
 	}
 });
@@ -1576,12 +1590,14 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 	return _public;
 })()));
 
-mvc.html.domViewMgr=new mvc.html._domViewMgr();
+mvc.app.ready(function(){
+	mvc.html.domViewMgr=new mvc.html._domViewMgr();
+});
 /**
  * Parser of <?mvc code ?>.
  * ./html/part_parser.js
  */
-mvc.ext(mvc.html, "parser", new (function() {
+mvc.ext(mvc.cls, "html_js_parser", function() {
 	var _public = {
 		/**
 		 * Parse html code within specific scope(params).
@@ -1653,7 +1669,7 @@ mvc.ext(mvc.html, "parser", new (function() {
 	
 	_private.init();
 	return _public;
-})());
+});
 
 mvc.ext(mvc.html, "parseExec", function(__code__, __scope__) {
 	with(__scope__) {
@@ -1670,6 +1686,11 @@ mvc.ext(mvc.html, "parseJSON", function(__code__) {
 		} catch(e) {
 			mvc.log.e(e, "Parse JSON Object:", __code__);
 		}
+});
+
+
+mvc.app.ready(function(){
+	mvc.ext(mvc.html,"parser",new mvc.cls.html_js_parser());
 });
 
 /**
@@ -1710,8 +1731,9 @@ mvc.ext(mvc.html,"element",function(){
 	
 });
 
-mvc.html.element();
-
+mvc.app.ready(function(){
+	mvc.html.element();
+});
 mvc.cfg.addItem("html_element",function(opt){
 	if (opt.elementPath==undefined){
 		mvc.cfg.err("elementPath");
@@ -1726,14 +1748,14 @@ mvc.cfg.addItem("html_element",function(opt){
  * ./html/part_permenant_link.js
  */
 
-mvc.cfg.addItem("html_startup_action",function(opt){
-	if  (opt.onStart===undefined){
+mvc.cfg.addItem("html_startup_action", function(opt) {
+	if(opt.onStart === undefined) {
 		mvc.err("onStart");
 		return false;
 	}
 })
 
-mvc.ext(mvc.cls,"staticLink",function(hrefStr){
+mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 	var conStr = mvc.opt.onStart.controller;
 	var actStr = mvc.opt.onStart.method;
 	var params = [];
@@ -1781,19 +1803,25 @@ mvc.ext(mvc.cls,"staticLink",function(hrefStr){
 			}
 			mvc.ctl(conStr).sendMSG(actStr, params);
 			return;
-		}else{
+		} else {
 			mvc.log.i("_act is not found in static link");
 		}
 
 	}
-	if (mvc.ctl(conStr).checkCtl(actStr)){
-		mvc.ctl(conStr).sendMSG(actStr,[]);
-	}else{
-		mvc.log.i("default controller or method is not found.");
+	if( typeof mvc.opt.launch === "function") {
+		mvc.opt.launch({
+			controller:conStr,
+			action:actStr
+		});
+		return;
+	}else if(mvc.ctl(conStr).checkCtl(actStr)) {
+		mvc.ctl(conStr).sendMSG(actStr, []);
+	} else {
+		mvc.log.i("default launch method or controller or method is not found.");
 	}
 	return;
 });
-$(document).ready(function() {
+mvc.app.ready(function() {
 	var hrefStr = window.location.href;
 	return mvc.cls.staticLink(hrefStr);
 });

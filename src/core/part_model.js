@@ -35,11 +35,17 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		}
 	},
 	setFilter : function(filter) {
+		if (filter==undefined || filter==null){
+			filter=null;
+		}
 		this.props.filter = filter;
 		this.reset();
 		this.arrangeData();
 	},
 	setSorter : function(sorter) {
+		if (sorter==undefined || sorter==null){
+			sorter=null;
+		}
 		this.props.sorter = sorter;
 		this.reset();
 		this.arrangeData();

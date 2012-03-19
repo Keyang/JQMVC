@@ -2,7 +2,7 @@
  * ./html/part_ajax.js
  */
 
-mvc.ext(mvc.html, "ajax", new (function() {
+mvc.ext(mvc.cls, "dom_ajax", function() {
 	var _props = {
 		cachedHtml : {},
 		cfg_ajax:null
@@ -107,4 +107,9 @@ mvc.ext(mvc.html, "ajax", new (function() {
 		asyncLoad : _private.asyncLoad
 	};
 	return _public;
-})());
+});
+
+
+mvc.app.ready(function(){
+	mvc.ext(mvc.html,"ajax",new mvc.cls.dom_ajax());
+});

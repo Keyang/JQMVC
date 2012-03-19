@@ -45,9 +45,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		try {
 			if(forward === true) {
-				func = mvc.opt.interfaces.goBackPage;
+				func = mvc.opt.showNextPage;
 			} else {
-				func = mvc.opt.interfaces.goForwPage;
+				func = mvc.opt.showLastPage;
 			}
 			func(this.getName());
 			return $super();
@@ -73,7 +73,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		var path = "";
 		if(this.htmlPagePath == null) {
-			path = mvc.opt.pagePath + "/" + this.getName() + ".html";
+			path = mvc.opt.viewPath + "/" + this.getName() + ".html";
 		} else {
 			path = this.htmlPagePath;
 		}
@@ -192,20 +192,16 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 }));
 
 mvc.cfg.addItem("html.domview", function(opt) {
-	if(opt.interfaces == undefined) {
-		mvc.cfg.err("interfaces");
+	if(opt.showNextPage == undefined) {
+		mvc.cfg.err("showNextPage");
 		return false;
 	}
-	if(opt.interfaces.goBackPage == undefined) {
-		mvc.cfg.err("interfaces.goBackPage");
+	if(opt.showLastPage == undefined) {
+		mvc.cfg.err("showLastPage");
 		return false;
 	}
-	if(opt.interfaces.goForwPage == undefined) {
-		mvc.cfg.err("interfaces.goForwPage");
-		return false;
-	}
-	if(opt.pagePath == undefined) {
-		mvc.cfg.err("pagePath");
+	if(opt.viewPath == undefined) {
+		mvc.cfg.err("viewPath");
 		return false;
 	}
 });

@@ -106,4 +106,6 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 	return _public;
 })()));
 
-mvc.html.domViewMgr=new mvc.html._domViewMgr();
+mvc.app.ready(function(){
+	mvc.html.domViewMgr=new mvc.html._domViewMgr();
+});

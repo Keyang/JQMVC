@@ -191,7 +191,7 @@ def main():
   redefinevars();
   print ("Start to build folder:" + PATH_PREFIX);
   readIndexFile();
-  mergeCfgFile();
+  #mergeCfgFile();
   
   
 if __name__ == '__main__':

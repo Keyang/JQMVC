@@ -36,8 +36,9 @@ mvc.ext(mvc.html,"element",function(){
 	
 });
 
-mvc.html.element();
-
+mvc.app.ready(function(){
+	mvc.html.element();
+});
 mvc.cfg.addItem("html_element",function(opt){
 	if (opt.elementPath==undefined){
 		mvc.cfg.err("elementPath");

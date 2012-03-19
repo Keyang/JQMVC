@@ -2,7 +2,7 @@
  * Parser of <?mvc code ?>.
  * ./html/part_parser.js
  */
-mvc.ext(mvc.html, "parser", new (function() {
+mvc.ext(mvc.cls, "html_js_parser", function() {
 	var _public = {
 		/**
 		 * Parse html code within specific scope(params).
@@ -74,7 +74,7 @@ mvc.ext(mvc.html, "parser", new (function() {
 	
 	_private.init();
 	return _public;
-})());
+});
 
 mvc.ext(mvc.html, "parseExec", function(__code__, __scope__) {
 	with(__scope__) {
@@ -91,5 +91,10 @@ mvc.ext(mvc.html, "parseJSON", function(__code__) {
 		} catch(e) {
 			mvc.log.e(e, "Parse JSON Object:", __code__);
 		}
+});
+
+
+mvc.app.ready(function(){
+	mvc.ext(mvc.html,"parser",new mvc.cls.html_js_parser());
 });
 

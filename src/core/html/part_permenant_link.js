@@ -4,14 +4,14 @@
  * ./html/part_permenant_link.js
  */
 
-mvc.cfg.addItem("html_startup_action",function(opt){
-	if  (opt.onStart===undefined){
+mvc.cfg.addItem("html_startup_action", function(opt) {
+	if(opt.onStart === undefined) {
 		mvc.err("onStart");
 		return false;
 	}
 })
 
-mvc.ext(mvc.cls,"staticLink",function(hrefStr){
+mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 	var conStr = mvc.opt.onStart.controller;
 	var actStr = mvc.opt.onStart.method;
 	var params = [];
@@ -59,19 +59,25 @@ mvc.ext(mvc.cls,"staticLink",function(hrefStr){
 			}
 			mvc.ctl(conStr).sendMSG(actStr, params);
 			return;
-		}else{
+		} else {
 			mvc.log.i("_act is not found in static link");
 		}
 
 	}
-	if (mvc.ctl(conStr).checkCtl(actStr)){
-		mvc.ctl(conStr).sendMSG(actStr,[]);
-	}else{
-		mvc.log.i("default controller or method is not found.");
+	if( typeof mvc.opt.launch === "function") {
+		mvc.opt.launch({
+			controller:conStr,
+			action:actStr
+		});
+		return;
+	}else if(mvc.ctl(conStr).checkCtl(actStr)) {
+		mvc.ctl(conStr).sendMSG(actStr, []);
+	} else {
+		mvc.log.i("default launch method or controller or method is not found.");
 	}
 	return;
 });
-$(document).ready(function() {
+mvc.app.ready(function() {
 	var hrefStr = window.location.href;
 	return mvc.cls.staticLink(hrefStr);
 });
