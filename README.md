@@ -85,7 +85,7 @@ Above code introduces jQuery Library and JQMVC library online (you could import 
 
 There is only one "div" tag with id "pages" in body. This tag indicates JQMVC library where to render view pages.
 
-Next, let's take a look at what is inside ./app/app.js which contains app configurations.
+Next, let's take a look at what is inside ./app/app.js
 
 ./app/app.js
 
@@ -116,3 +116,6 @@ in a web server due to [Local File Access Denied In Chrome](http://groups.google
 
 
 **Checkout the example code [here](JQMVC/tree/master/example/1-helloworld)**
+
+
+For more information, please navigate to the [wiki page] (JQMVC/wiki)
