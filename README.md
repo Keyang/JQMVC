@@ -51,14 +51,14 @@ This is a small set of conventions and classes that make writing maintainable ap
 
 Basically, it is recommended to initiate your app with following structure:
 
-![Project Structure](./JQMVC/wiki/images/projectstructure.png)
+![Project Structure](https://github.com/Keyang/JQMVC/wiki/images/projectstructure.png)
 
 
-For each elements in the structure above, please checkout [example: 0-AppStructure](JQMVC/tree/master/example/0-AppStructure) for details.
+For each elements in the structure above, please checkout [example: 0-AppStructure](https://github.com/Keyang/JQMVC/tree/master/example/0-AppStructure) for details.
 
 The structure could be different due to requirement, configuration, and developer code style.
 
-You could download an empty project structure above [here](JQMVC/wiki/resources/0-AppStructure.zip)
+You could download an empty project structure above [here](https://github.com/Keyang/JQMVC/wiki/resources/0-AppStructure.zip)
 
 #### Step 2 -- App Implementation
 
@@ -118,4 +118,4 @@ in a web server due to [Local File Access Denied In Chrome](http://groups.google
 **Checkout the example code [here](JQMVC/tree/master/example/1-helloworld)**
 
 
-For more information, please navigate to the [wiki page] (JQMVC/wiki)
+For more information, please navigate to the [wiki page] (https://github.com/Keyang/JQMVC/wiki/_pages)
