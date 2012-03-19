@@ -158,3 +158,7 @@ mvc.ext(mvc, "modelMgr", {
 		return mvc.models[name];
 	}
 });
+
+mvc.app.ready(function(){
+	mvc.regModel=mvc.modelMgr.regModel; //shortcuts.
+});
