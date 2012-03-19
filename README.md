@@ -22,4 +22,11 @@ With simple and elegant syntax, Javascript Application is no longer a nightmare.
 
 ### Hello World 
 
+JQMVC apps work best when they follow the simple application structure guidelines.
+This is a small set of conventions and classes that make writing maintainable apps simpler, especially when you work as part of a team.
 
+#### Step 1 -- Set up Project Structure
+
+Basically, it is recommended to initiate your app with following structure:
+
+ 
