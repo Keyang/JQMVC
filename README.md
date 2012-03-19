@@ -29,7 +29,13 @@ This is a small set of conventions and classes that make writing maintainable ap
 
 Basically, it is recommended to initiate your app with following structure:
 
-![Project Structure](./wiki/images/projectstructure.png)
+![Project Structure](./JQMVC/wiki/images/projectstructure.png)
+
+
+For each elements in the structure above, please checkout [example: 0-AppStructure](JQMVC/tree/master/example/0-AppStructure) for details.
+
+
+
 
 
 
