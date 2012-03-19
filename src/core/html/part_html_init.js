@@ -21,7 +21,6 @@ mvc.cfg.addItem("html_init",function(opt){
 
 mvc.app.ready(function(){
 	mvc.cfg.check(mvc.opt);
-	mvc.view=mvc.html.domViewMgr;// create a shortcut for dom view manager.
 });
 
 //fix ie console issue

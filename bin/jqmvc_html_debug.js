@@ -1113,7 +1113,6 @@ mvc.cfg.addItem("html_init",function(opt){
 
 mvc.app.ready(function(){
 	mvc.cfg.check(mvc.opt);
-	mvc.view=mvc.html.domViewMgr;// create a shortcut for dom view manager.
 });
 
 //fix ie console issue
@@ -1287,7 +1286,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	"htmlPagePath" : null,
 	"loadStatus" : "init", // init,  loading, parsing, loaded
 	initialise : function($super, name) {
-		$super(name, mvc.html.domViewMgr);
+		$super(name, mvc.html.viewMgr);
 	},
 	update : function(model) {
 		var data = this.fire("beforeUpdate", this.model.getData(), undefined, false);
@@ -1296,9 +1295,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		}
 		this.uidata = data;
 		this.loadDom(true);
-		var currentView = mvc.html.domViewMgr.get();
+		var currentView = this.viewMgr.get();
 		if(currentView) {
-			var currentViewName = mvc.html.domViewMgr.get().getName();
+			var currentViewName = this.viewMgr.get().getName();
 			if(currentViewName === this.getName()) {
 				this.display();
 			}
@@ -1592,7 +1591,9 @@ mvc.ext(mvc.html, "_domViewMgr",mvc.Class.create(mvc.cls.absViewMgr,new (functio
 })()));
 
 mvc.app.ready(function(){
-	mvc.html.domViewMgr=new mvc.html._domViewMgr();
+	mvc.html.viewMgr=new mvc.html._domViewMgr();
+	mvc.viewMgr=mvc.html.viewMgr;// create a shortcut for html view manager.
+	mvc.view=mvc.viewMgr.get; //shortcut for most commonly used method.
 });
 /**
  * Parser of <?mvc code ?>.
