@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>JQMVC: Be Efficient & Logic</title>
+		<link href="style.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="js/jquery1.7.js"></script>
+		<script type="text/javascript" src="./js/jqmvc_html.min.js"></script>
+		<script>
+			mvc.app.init({
+				launch : function() {
+					mvc.view("underconstruct").show();
+				}
+			});
+
+		</script>
+	</head>
+	<body>
+		<div id="wrapper">
+			<div id="topbar"></div>
+			<div id="nav">
+				<ul id="menu">
+					<li>
+						<a href="index.html" class="home">
+						<div>
+							Home
+						</div><span></span></a>
+					</li>
+					<li>
+						<a href="features.html" class="itunes">
+						<div>
+							Features
+						</div><span></span></a>
+					</li>
+					<li>
+						<a href="#" class="ipod">
+						<div>
+							Plugins
+						</div><span></span></a>
+					</li>
+					<li>
+						<a href="examples.html" class="about">
+						<div>
+							Examples
+						</div><span></span></a>
+					</li>
+					<li>
+						<a href="https://github.com/Keyang/JQMVC/wiki" class="accessories" target="_blank">
+						<div>
+							Documentation
+						</div><span></span></a>
+					</li>
+					<li>
+						<a href="https://github.com/Keyang/JQMVC" class="contact" target="_blank">
+						<div>
+							GitHub
+						</div><span></span></a>
+					</li>
+				</ul>
+			</div>
+			<div id="content">
+				<div id="pages"></div>
+			</div>
+		</div>
+		<div id="footer">
+			<a href="http://keyangxiang.com" target="_blank">Copyright © 2011-2012 Keyang Xiang</a>
+			<br />
+		</div>
+		</div>
+	</body>
+</html>
