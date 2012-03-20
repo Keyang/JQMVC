@@ -1,0 +1,46 @@
+*								{ margin: 0; padding: 0; }
+a								{ text-decoration: none; outline: none; }
+a img							{ border: none; }
+
+h2								{ font-family: Georgia, Serif; font-size: 36px; text-align: center; 
+								  font-weight: normal; }
+
+#slider							{
+	height: 270px;
+	overflow: hidden;
+	position: relative;
+	margin: 0;
+	padding-top: 30px;
+}
+								  
+                                /* DEFAULT is for three panels in width, adjust as needed
+                                   This only matters if JS is OFF, otherwise JS sets this. */								  
+#mover							{ width: 2880px; position: relative; }
+
+.slide							{
+	width: 410px;
+	float: left;
+	position: relative;
+	padding-left: 500px;
+}
+.slide h1						{
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-size: 28px;
+	letter-spacing: -1px;
+	color: #666666;
+	font-style: italic;
+	line-height: 50px;
+}
+.slide p						{
+	color: #737373;
+	font-size: 14px;
+	line-height: 24px;
+	width: 330px;
+}
+.slide img						{
+	position: absolute;
+	top: 0px;
+	left: 30px;
+}
+#slider-stopper					{ position: absolute; top: 1px; right: 20px; background: #ffb02c; color: white;
+								  padding: 3px 8px; font-size: 10px; text-transform: uppercase; z-index: 1000; }
