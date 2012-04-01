@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<script src="./js/jquery1.7.js"></script>
+	<script>
+		$(document).ready(function(){
+			$("#clickme").click(function(){
+				$.ajax({
+					url:"http://exp.jqmvc.com/test/index.html",
+					success:function(res){
+						console.log(res);
+					},
+					error:function(xhr,textStatus,err){
+						console.log(textStatus);
+					}
+				})
+			});
+		});
+		
+	</script>
+</head>
+
+<input type="button" value="click" id="clickme" />
+</html>
