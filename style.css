@@ -311,3 +311,10 @@ a{
 	font-size:14px;
 	padding-left:10px;
 }
+
+.page{
+	display:none;
+}
+.page.currentPage{
+	display:block;
+}

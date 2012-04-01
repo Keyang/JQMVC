@@ -1,0 +1,76 @@
+<link rel="stylesheet" href="./css/example.css"/>
+<h3>Example: <?mvc echo (name)?></h3>
+<div class="example_all example_view">
+	<div class="example_container">
+		<div class="example_body" style="width:<?mvc echo(width)?>;height:<?mvc echo(height)?>">
+			<iframe  frameborder=0 width="100%" height="100%" src="<?mvc echo(url)?>"></iframe>
+		</div>
+	</div>
+	<div class="code_list example_view">
+		<a class="example_preview" id="preview" href="./examples.html" >Back</a>
+		<a class="example_preview" id="download" href="<?mvc echo(downloadUrl)?>">Download All</a>
+		<div class="code_view">
+			<h3>Views</h3>
+			<ul>
+				<?mvc
+					var views=files.view;
+					
+					for (var i=0;i<views.length;i++){
+						var view=views[i];
+						echo ("<li>");
+						echo ("<input type='hidden' class='type' value='view'/>");
+						echo ("<input type='hidden' class='name' value='"+view+"'/>");
+						echo (view+".html");
+						echo ("</li>");
+						
+					}
+				
+				?>
+			</ul>
+		</div>
+		<div class="code_controller">
+			<h3>Controllers</h3>
+			<ul>
+				<?mvc
+					var views=files.controller;
+					
+					for (var i=0;i<views.length;i++){
+						var view=views[i];
+						echo ("<li>");
+							echo ("<input type='hidden' class='type' value='controller'/>");
+						echo ("<input type='hidden' class='name' value='"+view+"'/>");
+						echo (view+".js");
+						echo ("</li>");
+						
+					}
+				
+				?>
+			</ul>
+		</div>
+		<div class="code_model">
+			<h3>Models</h3>
+			<ul>
+				<?mvc
+					var views=files.model;
+					
+					for (var i=0;i<views.length;i++){
+						var view=views[i];
+						echo ("<li>");
+							echo ("<input type='hidden' class='type' value='model'/>");
+						echo ("<input type='hidden' class='name' value='"+view+"'/>");
+						echo (view+".js");
+						echo ("</li>");
+						
+					}
+				
+				?>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div class="example_code">
+	<p class="code_title"><b>Code</b></p>
+	<p><b>Type:<span id="type"></span>  Name:<span id="name"></span></b></p>
+	<div><pre class="code_area" id="code_area">Click one file to view the code</pre></div>
+</div>

@@ -1,0 +1,26 @@
+<link rel="stylesheet" href="./css/example_list.css"/>
+<div class="example_list">
+	<ul>
+		<?mvc
+			if (data.length==0){
+				echo("No Example Found");
+			}else{
+				for (var i=0;i<data.length;i++){
+					var d=data[i];
+					var imgSrc=d.icon;
+					if (imgSrc==undefined || imgSrc==""){
+						imgSrc="./images/project_default.jpg"
+					}
+					echo ("<li>");
+					echo ("<div>");
+					echo ("<img src='"+imgSrc+"'/>")	
+					echo ("</div>");
+					echo ("<input type='hidden' class='flag' value='"+d.flag+"'/>")
+					echo (d.name);
+					echo ("</li>");
+				}
+			}
+		?>
+	</ul>
+
+</div>
