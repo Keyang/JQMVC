@@ -435,6 +435,9 @@ mvc.ext(mvc, "ctl", function(name) {
 				if(args === undefined || args === null) {
 					args = [];
 				}
+				if(!( args instanceof Array)) {
+					args = [args];
+				}
 				return ctl[msg].apply(ctl, args);
 			}
 			return;
@@ -448,6 +451,9 @@ mvc.ext(mvc, "ctl", function(name) {
 				setTimeout(function() {
 					if(args === undefined || args === null) {
 						args = [];
+					}
+					if(!( args instanceof Array)) {
+						args = [args];
 					}
 					var res = ctl[msg].apply(ctl, args);
 					if(callback != undefined && typeof callback === "function") {
@@ -641,7 +647,8 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		filter : null,
 		proxy : null,
 		_data : null,
-		autoNotify : false
+		autoNotify : false,
+		autoLoad:false
 	},
 	events : null,
 	subscribe : function($super, view) {
@@ -664,6 +671,20 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 			this.reset();
 			this.arrangeData();
 		}
+		if (opt.methods!=undefined){
+			for (var key in opt.methods){
+				if (this[key]!=undefined){
+					continue; //over-written existing key, skip it!
+				}
+				this[key]=opt.methods[key];
+			}
+		}
+		if (this.props.autoLoad===true){
+			this.load();
+		}
+	},
+	setProxy:function(proxy){
+		this.props.proxy=proxy;
 	},
 	setFilter : function(filter) {
 		if (filter==undefined || filter==null){
@@ -790,9 +811,7 @@ mvc.ext(mvc, "modelMgr", {
 	}
 });
 
-mvc.app.ready(function(){
-	mvc.regModel=mvc.modelMgr.regModel; //shortcuts.
-});
+mvc.regModel=mvc.modelMgr.regModel; //shortcuts.
 /**
  * Model Proxy
  * part_proxy.js
@@ -1449,19 +1468,20 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		var that = this;
 		var args = arguments;
 		function bindEvent() {
-			var domEvent=null;
-			if(arguments.length === 0) {
+			var domEvent = null;
+			if(args.length === 0) {
 				return;
 			} else {
-				for(var i = 0; i < arguments.length; i++) {
-					domEvent = arguments[i];
-				}
-				for(var selector in domEvent) {
-					for(var evnt in domEvent[selector]) {
-						that.$(selector).unbind(evnt);
-						that.$(selector).bind(evnt, domEvent[selector][evnt]);
+				for(var i = 0; i < args.length; i++) {
+					domEvent = args[i];
+					for(var selector in domEvent) {
+						for(var evnt in domEvent[selector]) {
+							that.$(selector).unbind(evnt);
+							that.$(selector).bind(evnt, domEvent[selector][evnt]);
+						}
 					}
 				}
+
 			}
 
 		}
@@ -1470,7 +1490,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 			this.events.bind("domReady", "_setDomEvents", function() {
 				this.events.unbind("domReady", "_setDomEvents");
 				bindEvent();
-			})
+			});
 		} else {
 			bindEvent();
 		}
@@ -1817,8 +1837,6 @@ mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 				}
 				params = eval("(" + paramStr + ")");
 			}
-			mvc.ctl(conStr).sendMSG(actStr, params);
-			return;
 		} else {
 			mvc.log.i("_act is not found in static link");
 		}
@@ -1827,7 +1845,8 @@ mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 	if( typeof mvc.opt.launch === "function") {
 		mvc.opt.launch({
 			controller:conStr,
-			action:actStr
+			method:actStr,
+			param:params
 		});
 		return;
 	}else if(mvc.ctl(conStr).checkCtl(actStr)) {

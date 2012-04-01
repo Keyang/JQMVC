@@ -81,6 +81,50 @@ function test_model() {
 				expect("hello").toEqual(data.value);
 			});
 		});
+		it ("can add customised methods",function(){
+			var m = mvc.modelMgr.regModel({
+				"name" : "model1",
+				"proxy" : new mvc.proxy.simpleData({
+					"data" : "value",
+					"value" : "hello"
+				}),
+				"methods":{
+					getStringifiedData:function(callback){
+						if (this.data){
+							callback(JSON.stringify(this.data));
+						}else{
+							this.load({},function(err,data){
+								callback(JSON.stringify(data));
+							});
+						}
+					}
+					
+				}
+
+			});
+			m.getStringifiedData(function(res){
+				expect('{"data":"value","value":"hello"}').toEqual(res);
+			});
+		});
+		it ("can autoload data from proxy",function(){
+			var m = mvc.modelMgr.regModel({
+				"name" : "model1",
+				"proxy" : new mvc.proxy.simpleData({
+					"data" : "value",
+					"value" : "hello"
+				}),
+				autoLoad:true,
+				"methods":{
+					getStringifiedData:function(callback){
+							callback(JSON.stringify(this.props.data));
+					}
+				}
+
+			});
+			m.getStringifiedData(function(res){
+				expect('{"data":"value","value":"hello"}').toEqual(res);
+			});
+		});
 	});
 	describe("model data default process", function() {
 

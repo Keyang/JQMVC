@@ -60,6 +60,9 @@ mvc.ext(mvc, "ctl", function(name) {
 				if(args === undefined || args === null) {
 					args = [];
 				}
+				if(!( args instanceof Array)) {
+					args = [args];
+				}
 				return ctl[msg].apply(ctl, args);
 			}
 			return;
@@ -73,6 +76,9 @@ mvc.ext(mvc, "ctl", function(name) {
 				setTimeout(function() {
 					if(args === undefined || args === null) {
 						args = [];
+					}
+					if(!( args instanceof Array)) {
+						args = [args];
 					}
 					var res = ctl[msg].apply(ctl, args);
 					if(callback != undefined && typeof callback === "function") {

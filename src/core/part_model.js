@@ -10,7 +10,8 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 		filter : null,
 		proxy : null,
 		_data : null,
-		autoNotify : false
+		autoNotify : false,
+		autoLoad:false
 	},
 	events : null,
 	subscribe : function($super, view) {
@@ -33,6 +34,20 @@ mvc.ext(mvc.cls, "model", mvc.Class.create(mvc.cls.subject, {
 			this.reset();
 			this.arrangeData();
 		}
+		if (opt.methods!=undefined){
+			for (var key in opt.methods){
+				if (this[key]!=undefined){
+					continue; //over-written existing key, skip it!
+				}
+				this[key]=opt.methods[key];
+			}
+		}
+		if (this.props.autoLoad===true){
+			this.load();
+		}
+	},
+	setProxy:function(proxy){
+		this.props.proxy=proxy;
 	},
 	setFilter : function(filter) {
 		if (filter==undefined || filter==null){
@@ -159,6 +174,4 @@ mvc.ext(mvc, "modelMgr", {
 	}
 });
 
-mvc.app.ready(function(){
-	mvc.regModel=mvc.modelMgr.regModel; //shortcuts.
-});
+mvc.regModel=mvc.modelMgr.regModel; //shortcuts.

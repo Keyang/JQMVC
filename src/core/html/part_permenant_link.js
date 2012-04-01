@@ -57,8 +57,6 @@ mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 				}
 				params = eval("(" + paramStr + ")");
 			}
-			mvc.ctl(conStr).sendMSG(actStr, params);
-			return;
 		} else {
 			mvc.log.i("_act is not found in static link");
 		}
@@ -67,7 +65,8 @@ mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 	if( typeof mvc.opt.launch === "function") {
 		mvc.opt.launch({
 			controller:conStr,
-			action:actStr
+			method:actStr,
+			param:params
 		});
 		return;
 	}else if(mvc.ctl(conStr).checkCtl(actStr)) {

@@ -160,19 +160,20 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		var that = this;
 		var args = arguments;
 		function bindEvent() {
-			var domEvent=null;
-			if(arguments.length === 0) {
+			var domEvent = null;
+			if(args.length === 0) {
 				return;
 			} else {
-				for(var i = 0; i < arguments.length; i++) {
-					domEvent = arguments[i];
-				}
-				for(var selector in domEvent) {
-					for(var evnt in domEvent[selector]) {
-						that.$(selector).unbind(evnt);
-						that.$(selector).bind(evnt, domEvent[selector][evnt]);
+				for(var i = 0; i < args.length; i++) {
+					domEvent = args[i];
+					for(var selector in domEvent) {
+						for(var evnt in domEvent[selector]) {
+							that.$(selector).unbind(evnt);
+							that.$(selector).bind(evnt, domEvent[selector][evnt]);
+						}
 					}
 				}
+
 			}
 
 		}
@@ -181,7 +182,7 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 			this.events.bind("domReady", "_setDomEvents", function() {
 				this.events.unbind("domReady", "_setDomEvents");
 				bindEvent();
-			})
+			});
 		} else {
 			bindEvent();
 		}
