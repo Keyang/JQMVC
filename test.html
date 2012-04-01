@@ -8,6 +8,7 @@
 			$("#clickme").click(function(){
 				$.ajax({
 					url:"http://exp.jqmvc.com/test/index.html",
+					crossDomain:true,
 					success:function(res){
 						console.log(res);
 					},
