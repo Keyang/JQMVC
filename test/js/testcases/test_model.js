@@ -31,12 +31,18 @@ function test_model() {
 		})
 	});
 	describe("model", function() {
-		mvc.modelMgr.regModel({
-			name : "contact",
-			proxy : new mvc.proxy.ajax("./app/data.json", "json")
-		});
 
 		it("can load data and subscribe updated info", function() {
+			mvc.modelMgr.regModel({
+				name : "contact",
+				proxy : new mvc.proxy.simpleData({
+					"name" : "myName",
+					"age" : "25",
+					"country" : "Ireland",
+					"tel" : "010-2254621",
+					"url" : "http://google.com"
+				})
+			});
 			var ajaxview = mvc.viewMgr.get("ajax");
 			ajaxview.bindModel(mvc.modelMgr.get("contact"));
 			var contact = mvc.modelMgr.get("contact");
@@ -46,11 +52,32 @@ function test_model() {
 			});
 		});
 		it("can update data", function() {
+			var m = mvc.modelMgr.get("contact");
+			m.save({
+				"name" : "name1",
+				"age" : "999",
+				"country" : "USA",
+				"tel" : "010-999999",
+				"url" : "http://yahoo.com"
+			})
 			var ajaxview = mvc.viewMgr.get("ajax");
-			var contact = mvc.modelMgr.get("contact");
-			contact.load({}, function() {
+			var contact = m;
+			contact.load({}, function() { 
 				contact.notifyAll();
+				expect("name1").toEqual(ajaxview.$("#name").text());
 			});
+		});
+		it ("can update data directly without model",function(){
+			var data={
+				"name" : "name2",
+				"age" : "999",
+				"country" : "USA",
+				"tel" : "010-999999",
+				"url" : "http://yahoo.com"
+			}
+			var ajaxview=mvc.view("ajax");
+			ajaxview.update(data);
+			expect("name2").toEqual(ajaxview.$("#name").text());
 		});
 		it("can reg multiple models", function() {
 			mvc.modelMgr.regModel({
@@ -81,47 +108,46 @@ function test_model() {
 				expect("hello").toEqual(data.value);
 			});
 		});
-		it ("can add customised methods",function(){
+		it("can add customised methods", function() {
 			var m = mvc.modelMgr.regModel({
 				"name" : "model1",
 				"proxy" : new mvc.proxy.simpleData({
 					"data" : "value",
 					"value" : "hello"
 				}),
-				"methods":{
-					getStringifiedData:function(callback){
-						if (this.data){
+				"methods" : {
+					getStringifiedData : function(callback) {
+						if(this.data) {
 							callback(JSON.stringify(this.data));
-						}else{
-							this.load({},function(err,data){
+						} else {
+							this.load({}, function(err, data) {
 								callback(JSON.stringify(data));
 							});
 						}
 					}
-					
 				}
 
 			});
-			m.getStringifiedData(function(res){
+			m.getStringifiedData(function(res) {
 				expect('{"data":"value","value":"hello"}').toEqual(res);
 			});
 		});
-		it ("can autoload data from proxy",function(){
+		it("can autoload data from proxy", function() {
 			var m = mvc.modelMgr.regModel({
 				"name" : "model1",
 				"proxy" : new mvc.proxy.simpleData({
 					"data" : "value",
 					"value" : "hello"
 				}),
-				autoLoad:true,
-				"methods":{
-					getStringifiedData:function(callback){
-							callback(JSON.stringify(this.props.data));
+				autoLoad : true,
+				"methods" : {
+					getStringifiedData : function(callback) {
+						callback(JSON.stringify(this.props.data));
 					}
 				}
 
 			});
-			m.getStringifiedData(function(res){
+			m.getStringifiedData(function(res) {
 				expect('{"data":"value","value":"hello"}').toEqual(res);
 			});
 		});

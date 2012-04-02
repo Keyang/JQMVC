@@ -11,12 +11,16 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	initialise : function($super, name) {
 		$super(name, mvc.html.viewMgr);
 	},
-	update : function(model) {
-		var data = this.fire("beforeUpdate", this.model.getData(), undefined, false);
-		if(!data) {
+	update : function(data) {
+		if (this.model!=undefined && !data){
 			data = this.model.getData();
 		}
+		if (data==undefined){
+			data=this.uidata;
+		}
+		data=this.fire("beforeUpdate", data, undefined, false);
 		this.uidata = data;
+		this.load(true);
 		this.loadDom(true);
 		var currentView = this.viewMgr.get();
 		if(currentView) {
@@ -30,6 +34,9 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 	 * Synchorously load / render / display current view.
 	 */
 	show : function() {
+		if(this.model) {
+			this.uidata = this.model.getData();
+		}
 		this.load();
 		this.loadDom();
 		this.display(true);
@@ -86,9 +93,6 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		// _props.uidata = mvc.html.uidata.getUIDataScope(_private.getUIDataPath());
 		// }
 		var uidata = {};
-		if(this.model) {
-			uidata = this.model.getData();
-		}
 		uidata = mvc.util.copyJSON(this.uidata, uidata);
 		var params = uidata;
 		this.loadStatus = "loading";

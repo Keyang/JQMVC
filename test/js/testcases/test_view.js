@@ -192,13 +192,14 @@ function test_view() {
 		});
 		it("can parse url to user actions", function() {
 			var testUrl = "index.html?_ctl=permLink&_act=getValue";
-			mvc.cls.staticLink(testUrl);
-			expect(5).toEqual(val);
+			var msgObj=mvc.cls.staticLink(testUrl);
+			expect("permLink").toEqual(msgObj.controller);
+			expect("getValue").toEqual(msgObj.method);
 		});
 		it("can pass params to controller methods", function() {
 			var testUrl = "index.html?_ctl=permLink&_act=calc&_param=[3,5]";
-			mvc.cls.staticLink(testUrl);
-			expect(8).toEqual(val);
+			var msgObj=mvc.cls.staticLink(testUrl);
+			expect("[3,5]").toEqual(msgObj.params);
 		});
 	});
 }

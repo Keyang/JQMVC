@@ -55,28 +55,32 @@ mvc.ext(mvc.cls, "staticLink", function(hrefStr) {
 				} else {
 					paramStr = subStr.substring(0, e2);
 				}
-				params = eval("(" + paramStr + ")");
+				params = paramStr;
 			}
 		} else {
 			mvc.log.i("_act is not found in static link");
 		}
 
 	}
-	if( typeof mvc.opt.launch === "function") {
-		mvc.opt.launch({
+	return {
 			controller:conStr,
 			method:actStr,
-			param:params
-		});
-		return;
+			params:params
+	}
+	
+});
+mvc.app.ready(function() {
+	var hrefStr = window.location.href;
+	var msgObj= mvc.cls.staticLink(hrefStr);
+	var conStr=msgObj.controller;
+	var actStr=msgObj.method;
+	var params=msgObj.params;
+	if( typeof mvc.opt.launch === "function") {
+		mvc.opt.launch(msgObj);
 	}else if(mvc.ctl(conStr).checkCtl(actStr)) {
-		mvc.ctl(conStr).sendMSG(actStr, []);
+		mvc.ctl(conStr).sendMSG(actStr, params);
 	} else {
 		mvc.log.i("default launch method or controller or method is not found.");
 	}
 	return;
-});
-mvc.app.ready(function() {
-	var hrefStr = window.location.href;
-	return mvc.cls.staticLink(hrefStr);
 });
