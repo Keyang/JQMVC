@@ -1169,8 +1169,8 @@ mvc.app.init({
 	 * @param pageID: id of Page to be loaded.
 	 */
 	showNextPage : function(pageID) {
-		var jQueryObj = $("#" + pageID);
-		var curPage = $(".currentPage");
+		var jQueryObj = mvc.$("#" + pageID);
+		var curPage = mvc.$(".currentPage");
 		if(curPage.length > 0) {
 			curPage.removeClass("currentPage");
 		}
@@ -1180,8 +1180,8 @@ mvc.app.init({
 	 * This is invoked when framework receives a "back" action. e.g. If you have different animation for goFowardPage and goBackPage, you should set up them differently.
 	 */
 	showLastPage : function(pageID) {
-		var jQueryObj = $("#" + pageID);
-		var curPage = $(".currentPage");
+		var jQueryObj = mvc.$("#" + pageID);
+		var curPage = mvc.$(".currentPage");
 		if(curPage.length > 0) {
 			curPage.removeClass("currentPage");
 		}
