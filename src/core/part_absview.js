@@ -73,8 +73,17 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer, {
 	 * It will fire "displayed" event
 	 * Return displayed content
 	 */
-	display : function() {
-		this.fire("displayed", [this, this.viewMgr], undefined, false);
+	display : function(isStack) {
+		
+		var vmgr=this.viewMgr;
+		if (isStack){
+			var curView=vmgr.get();
+			if (curView!=null){
+				vmgr.historyStack.push(curView.getName());
+			}
+			
+		}
+		this.fire("displayed", [this,vmgr], undefined, false);
 		return this.op_buf;
 	},
 	/**
