@@ -1023,8 +1023,17 @@ mvc.ext(mvc.cls, "absview", mvc.Class.create(mvc.cls.observer, {
 	 * It will fire "displayed" event
 	 * Return displayed content
 	 */
-	display : function() {
-		this.fire("displayed", [this, this.viewMgr], undefined, false);
+	display : function(isStack) {
+		
+		var vmgr=this.viewMgr;
+		if (isStack){
+			var curView=vmgr.get();
+			if (curView!=null){
+				vmgr.historyStack.push(curView.getName());
+			}
+			
+		}
+		this.fire("displayed", [this,vmgr], undefined, false);
 		return this.op_buf;
 	},
 	/**
@@ -1054,10 +1063,6 @@ mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
 			}
 		}
 		this.events.bind("displayed", "_history_event", function(v,vmgr) {
-			var curView=vmgr.get();
-			if (curView!=null){
-				vmgr.historyStack.push(curView.getName());
-			}
 			vmgr.props.curView = v;
 		});
 	},
@@ -1361,11 +1366,14 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		try {
 			if(forward === true) {
 				func = mvc.opt.showNextPage;
+				
+
+
 			} else {
 				func = mvc.opt.showLastPage;
 			}
 			func(this.getName());
-			return $super();
+			return $super(forward);
 		} catch(e) {
 			mvc.log.e(e, "Display View", this.getName());
 		}

@@ -18,10 +18,6 @@ mvc.ext(mvc.cls, "absViewMgr", mvc.Class.create({
 			}
 		}
 		this.events.bind("displayed", "_history_event", function(v,vmgr) {
-			var curView=vmgr.get();
-			if (curView!=null){
-				vmgr.historyStack.push(curView.getName());
-			}
 			vmgr.props.curView = v;
 		});
 	},
