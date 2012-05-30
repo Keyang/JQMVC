@@ -53,11 +53,14 @@ mvc.ext(mvc.html, "view_dom", mvc.Class.create(mvc.cls.absview, {
 		try {
 			if(forward === true) {
 				func = mvc.opt.showNextPage;
+				
+
+
 			} else {
 				func = mvc.opt.showLastPage;
 			}
 			func(this.getName());
-			return $super();
+			return $super(forward);
 		} catch(e) {
 			mvc.log.e(e, "Display View", this.getName());
 		}
